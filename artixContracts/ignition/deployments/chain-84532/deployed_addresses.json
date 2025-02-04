@@ -1,0 +1,9 @@
+{
+  "ArtifactDeployment#MemeContestImpl": "0x606a4740DbFE9E6704411F5E3C589F2D7BfE9a1B",
+  "ArtifactDeployment#NFTContract": "0x017f9Da44a318A7e93475c41177D1D9439c49282",
+  "ArtifactDeployment#RankingImpl": "0xbce70D321C1cB11eE3bD2F477f3E87E400Cd3282",
+  "ArtifactDeployment#MemeContestProxy": "0x19f681dEdCb7433f43E855C6Ae4eEe4cdC056951",
+  "ArtifactDeployment#RankingProxy": "0xC3200e0D278b0174D7E272Ff91b75D70A93B407A",
+  "ArtifactDeployment#MemeContestProxied": "0x19f681dEdCb7433f43E855C6Ae4eEe4cdC056951",
+  "ArtifactDeployment#RankingProxied": "0xC3200e0D278b0174D7E272Ff91b75D70A93B407A"
+}
