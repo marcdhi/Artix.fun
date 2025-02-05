@@ -1,11 +1,10 @@
 import "./App.css";
+import Home from "./components/Home";
 
 function App() {
   return (
-    <div>
-      <h1 className="text-3xl font-bold underline font-serif text-center text-blue-500">
-        Artix.fun
-      </h1>
+    <div className="w-full min-h-screen overflow-x-hidden">
+      <Home />
     </div>
   );
 }
