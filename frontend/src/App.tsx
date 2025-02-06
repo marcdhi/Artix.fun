@@ -1,12 +1,22 @@
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import Home from "./components/Home";
+import CreateMeme from "./components/CreateMeme";
+import MyPage from "./components/MyPage";
 import "./App.css";
 
 function App() {
   return (
-    <div>
-      <h1 className="text-3xl font-bold underline font-serif text-center text-blue-500">
-        Artix.fun
-      </h1>
-    </div>
+    <Router>
+      <div className="w-full min-h-screen bg-white">
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/create" element={<CreateMeme />} />
+          <Route path="/my-page" element={<MyPage />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
