@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { ethers } from 'ethers';
 import ArtixMemeContestABI from '../abi/ArtixMemeContest.json';
+import ArtifactNFTABI from '../abi/ArtifactNFT.json';
+import { uploadToPinata } from '../utils/pinata';
 
 const ARTIX_CONTRACT_ADDRESS = import.meta.env.VITE_ARTIX_CONTRACT_ADDRESS;
+const ARTIX_NFT_CONTRACT_ADDRESS = import.meta.env.VITE_ARTIX_NFT_CONTRACT_ADDRESS;
 
 // Base Sepolia network parameters
 const BASE_SEPOLIA_PARAMS = {
@@ -79,7 +82,8 @@ function ExploreMemes() {
       setVotingConfig({
         maxVotes: config.maxVotes.toNumber(),
         contestDuration: config.contestDuration.toNumber(),
-        minVotesForWin: config.minVotesForWin.toNumber(),
+        // minVotesForWin: config.minVotesForWin.toNumber(),
+        minVotesForWin: 2,
         voteCost: config.voteCost
       });
     } catch (err) {
@@ -100,6 +104,80 @@ function ExploreMemes() {
     } catch (err) {
       console.error('Error checking user votes:', err);
       return memesList;
+    }
+  };
+
+  const mintNFTForMeme = async (meme: Meme) => {
+    if (!authenticated || !wallets?.[0]) {
+      login();
+      return;
+    }
+
+    try {
+      const wallet = wallets[0];
+      const provider = await wallet.getEthereumProvider();
+      
+      if (!provider) {
+        throw new Error('No provider available');
+      }
+
+      await switchToBaseSepolia(provider);
+
+      const ethersProvider = new ethers.providers.Web3Provider(provider);
+      const signer = ethersProvider.getSigner();
+
+      // Create NFT contract instance
+      const nftContract = new ethers.Contract(
+        ARTIX_NFT_CONTRACT_ADDRESS,
+        ArtifactNFTABI,
+        signer
+      );
+
+      // Prepare metadata
+      const metadata = {
+        name: meme.title,
+        description: meme.description,
+        image: meme.ipfsHash,
+        attributes: [
+          { trait_type: "Creator", value: meme.creator },
+          { trait_type: "Vote Count", value: meme.voteCount.toString() },
+          { trait_type: "Submission Time", value: new Date(meme.submissionTime * 1000).toISOString() },
+          { trait_type: "Network", value: meme.networkId.toString() }
+        ]
+      };
+
+      // Upload metadata to IPFS
+      const metadataBlob = new Blob([JSON.stringify(metadata)], { type: 'application/json' });
+      const metadataFile = new File([metadataBlob], 'metadata.json');
+      const tokenURI = await uploadToPinata(metadataFile);
+
+      // Mint NFT
+      const tx = await nftContract.mintMemeNFT(
+        meme.creator,
+        tokenURI,
+        meme.networkId,
+        { gasLimit: 500000 }
+      );
+
+      console.log('Minting NFT, transaction hash:', tx.hash);
+      await tx.wait();
+      
+      // Refresh memes to update status
+      await fetchMemes();
+      
+      alert('NFT minted successfully! Transaction hash: ' + tx.hash);
+    } catch (error: any) {
+      console.error('Error minting NFT:', error);
+      alert('Failed to mint NFT: ' + (error.message || 'Unknown error'));
+    }
+  };
+
+  const checkAndMintNFT = async (meme: Meme) => {
+    if (
+      meme.voteCount >= (votingConfig?.minVotesForWin || 0) &&
+      !meme.hasBeenMinted
+    ) {
+      await mintNFTForMeme(meme);
     }
   };
 
@@ -143,6 +221,12 @@ function ExploreMemes() {
       // Refresh memes after successful vote
       await fetchMemes();
       setVotingStatus(prev => ({ ...prev, [memeId]: 'success' }));
+
+      // After successful vote, check if meme should be minted
+      const votedMeme = memes.find(m => m.id === memeId);
+      if (votedMeme) {
+        await checkAndMintNFT(votedMeme);
+      }
     } catch (err: any) {
       console.error('Error voting:', err);
       setVotingStatus(prev => ({ ...prev, [memeId]: 'error' }));
