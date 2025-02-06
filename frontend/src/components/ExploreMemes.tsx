@@ -30,53 +30,155 @@ interface Meme {
   submissionTime: number;
   isActive: boolean;
   hasBeenMinted: boolean;
+  hasVoted?: boolean; // Whether current user has voted for this meme
+}
+
+interface VotingConfig {
+  maxVotes: number;
+  contestDuration: number;
+  minVotesForWin: number;
+  voteCost: ethers.BigNumber;
 }
 
 function ExploreMemes() {
-  const { authenticated } = usePrivy();
+  const { authenticated, login } = usePrivy();
   const { wallets } = useWallets();
   const [memes, setMemes] = useState<Meme[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [votingConfig, setVotingConfig] = useState<VotingConfig | null>(null);
+  const [votingStatus, setVotingStatus] = useState<{ [key: number]: 'loading' | 'success' | 'error' | null }>({});
+
+  const switchToBaseSepolia = async (provider: any) => {
+    try {
+      await provider.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: BASE_SEPOLIA_PARAMS.chainId }],
+      });
+    } catch (switchError: any) {
+      if (switchError.code === 4902) {
+        try {
+          await provider.request({
+            method: 'wallet_addEthereumChain',
+            params: [BASE_SEPOLIA_PARAMS],
+          });
+        } catch (addError) {
+          console.error('Error adding Base Sepolia network:', addError);
+          throw new Error('Could not add Base Sepolia network to your wallet');
+        }
+      } else {
+        console.error('Error switching to Base Sepolia:', switchError);
+        throw new Error('Could not switch to Base Sepolia network');
+      }
+    }
+  };
+
+  const fetchVotingConfig = async (contract: ethers.Contract) => {
+    try {
+      const config = await contract.votingConfiguration();
+      setVotingConfig({
+        maxVotes: config.maxVotes.toNumber(),
+        contestDuration: config.contestDuration.toNumber(),
+        minVotesForWin: config.minVotesForWin.toNumber(),
+        voteCost: config.voteCost
+      });
+    } catch (err) {
+      console.error('Error fetching voting config:', err);
+    }
+  };
+
+  const checkUserVotes = async (contract: ethers.Contract, memesList: Meme[], userAddress: string) => {
+    try {
+      const votedStatuses = await Promise.all(
+        memesList.map(meme => contract.hasVoted(meme.id, userAddress))
+      );
+      
+      return memesList.map((meme, index) => ({
+        ...meme,
+        hasVoted: votedStatuses[index]
+      }));
+    } catch (err) {
+      console.error('Error checking user votes:', err);
+      return memesList;
+    }
+  };
+
+  const voteMeme = async (memeId: number) => {
+    if (!authenticated || !wallets?.[0]) {
+      login();
+      return;
+    }
+
+    try {
+      setVotingStatus(prev => ({ ...prev, [memeId]: 'loading' }));
+
+      const wallet = wallets[0];
+      const provider = await wallet.getEthereumProvider();
+      
+      if (!provider) {
+        throw new Error('No provider available');
+      }
+
+      await switchToBaseSepolia(provider);
+
+      const ethersProvider = new ethers.providers.Web3Provider(provider);
+      const signer = ethersProvider.getSigner();
+      
+      const contract = new ethers.Contract(
+        ARTIX_CONTRACT_ADDRESS,
+        ArtixMemeContestABI,
+        signer
+      );
+
+      // Get vote cost from config if not already fetched
+      if (!votingConfig) {
+        await fetchVotingConfig(contract);
+      }
+      
+      const voteCost = votingConfig?.voteCost || ethers.utils.parseEther("0.01");
+
+      const tx = await contract.voteMeme(memeId, { value: voteCost });
+      await tx.wait();
+
+      // Refresh memes after successful vote
+      await fetchMemes();
+      setVotingStatus(prev => ({ ...prev, [memeId]: 'success' }));
+    } catch (err: any) {
+      console.error('Error voting:', err);
+      setVotingStatus(prev => ({ ...prev, [memeId]: 'error' }));
+      alert(err.message || 'Error voting for meme');
+    }
+  };
 
   const fetchMemes = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Get provider
       const provider = new ethers.providers.JsonRpcProvider(BASE_SEPOLIA_PARAMS.rpcUrls[0]);
-      
-      // Create contract instance
       const contract = new ethers.Contract(
         ARTIX_CONTRACT_ADDRESS,
         ArtixMemeContestABI,
         provider
       );
 
-      // Get total memes count (we'll need to add this to the contract)
+      // Fetch voting configuration
+      await fetchVotingConfig(contract);
+
       const memesList: Meme[] = [];
       let memeId = 0;
-      const MAX_MEMES_TO_CHECK = 100; // Maximum number of memes to check
-      let emptyMemeCount = 0; // Counter for consecutive empty memes
+      const MAX_MEMES_TO_CHECK = 100;
+      let emptyMemeCount = 0;
       
-      // Keep trying to fetch memes until we hit an error or reach max limit
       while (memeId < MAX_MEMES_TO_CHECK) {
         try {
           const meme = await contract.memes(memeId);
-          console.log(meme);
           
-          // Check if this is an empty meme
           if (meme.creator === '0x0000000000000000000000000000000000000000' || meme.ipfsHash === '') {
             emptyMemeCount++;
-            // If we find 3 consecutive empty memes, we can assume we've reached the end
-            if (emptyMemeCount >= 3) {
-              break;
-            }
+            if (emptyMemeCount >= 3) break;
           } else {
-            // Reset empty meme counter if we find a valid meme
             emptyMemeCount = 0;
-            // Add the valid meme to our list
             memesList.push({
               id: memeId,
               creator: meme.creator,
@@ -93,13 +195,18 @@ function ExploreMemes() {
           }
           memeId++;
         } catch (e) {
-          // If we hit an error, we've probably reached the end
           break;
         }
       }
 
-      setMemes(memesList);
-      console.log(memesList);
+      // Check user's voted status if authenticated
+      if (authenticated && wallets?.[0]?.address) {
+        const memesWithVoteStatus = await checkUserVotes(contract, memesList, wallets[0].address);
+        setMemes(memesWithVoteStatus);
+      } else {
+        setMemes(memesList);
+      }
+
     } catch (err: any) {
       console.error('Error fetching memes:', err);
       setError(err.message || 'Error fetching memes');
@@ -110,8 +217,7 @@ function ExploreMemes() {
 
   useEffect(() => {
     fetchMemes();
-    // console.log(memes);
-  }, []);
+  }, [authenticated, wallets?.[0]?.address]);
 
   const formatAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -126,6 +232,14 @@ function ExploreMemes() {
     return `https://ipfs.io/ipfs/${hash}`;
   };
 
+  const getVoteButtonText = (meme: Meme, status: string | null) => {
+    if (status === 'loading') return 'Voting...';
+    if (status === 'success') return 'Voted!';
+    if (status === 'error') return 'Failed - Try Again';
+    if (meme.hasVoted) return 'Already Voted';
+    return `Vote (${ethers.utils.formatEther(votingConfig?.voteCost || '0')} ETH)`;
+  };
+
   return (
     <div className="min-h-screen bg-[#F8F9FB] pt-8 pb-16">
       <div className="max-w-7xl mx-auto px-4">
@@ -136,6 +250,31 @@ function ExploreMemes() {
           <p className="text-base text-gray-600">
             Discover and vote for the best memes
           </p>
+          
+          {/* Voting Configuration Info */}
+          {votingConfig && (
+            <div className="mt-4 p-4 bg-white rounded-lg shadow-sm">
+              <h2 className="text-lg font-semibold mb-2">Contest Information</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <p className="text-sm text-gray-600">Vote Cost</p>
+                  <p className="font-medium text-gray-900">{ethers.utils.formatEther(votingConfig.voteCost)} ETH</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Max Votes</p>
+                  <p className="font-medium text-gray-900">{votingConfig.maxVotes}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Contest Duration</p>
+                  <p className="font-medium text-gray-900">{votingConfig.contestDuration / 86400} days</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Min Votes to Win</p>
+                  <p className="font-medium text-gray-900">{votingConfig.minVotesForWin}</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {loading ? (
@@ -170,14 +309,31 @@ function ExploreMemes() {
                   </div>
                   <div className="mt-4 flex items-center justify-between">
                     <span className="text-sm text-gray-600">Votes: {meme.voteCount}</span>
-                    <a
-                      href={meme.socialLinks}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:text-blue-700"
-                    >
-                      Social Links
-                    </a>
+                    <div className="flex items-center gap-4">
+                      <a
+                        href={meme.socialLinks}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 hover:text-blue-700"
+                      >
+                        Social Links
+                      </a>
+                      <button
+                        onClick={() => voteMeme(meme.id)}
+                        disabled={!authenticated || meme.hasVoted || votingStatus[meme.id] === 'loading'}
+                        className={`px-4 py-2 text-sm font-medium rounded ${
+                          !authenticated || meme.hasVoted
+                            ? 'bg-gray-100 text-gray-500'
+                            : votingStatus[meme.id] === 'success'
+                            ? 'bg-green-500 text-white'
+                            : votingStatus[meme.id] === 'error'
+                            ? 'bg-red-500 text-white'
+                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                        }`}
+                      >
+                        {getVoteButtonText(meme, votingStatus[meme.id])}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
