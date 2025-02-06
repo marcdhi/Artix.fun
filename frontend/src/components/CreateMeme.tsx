@@ -1,18 +1,39 @@
 import { useState } from 'react';
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
+import { ethers } from 'ethers';
+import axios from 'axios';
+import ArtixMemeContestABI from '../abi/ArtixMemeContest.json';
+
+const ARTIX_CONTRACT_ADDRESS = import.meta.env.VITE_ARTIX_CONTRACT_ADDRESS;
+const PINATA_API_KEY = import.meta.env.VITE_PINATA_API_KEY;
+const PINATA_SECRET_KEY = import.meta.env.VITE_PINATA_SECRET_KEY;
+
+// Base Sepolia network parameters
+const BASE_SEPOLIA_PARAMS = {
+  chainId: '0x' + Number(84532).toString(16), // Base Sepolia chainId in hex
+  chainName: 'Base Sepolia',
+  nativeCurrency: {
+    name: 'ETH',
+    symbol: 'ETH',
+    decimals: 18
+  },
+  rpcUrls: ['https://sepolia.base.org'],
+  blockExplorerUrls: ['https://sepolia.basescan.org']
+};
 
 function CreateMeme() {
   const { login, ready, authenticated } = usePrivy();
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const { wallets } = useWallets();
+  const [step, setStep] = useState<1 | 2>(1);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    supply: '',
-    network: ''
+    socialLinks: '',
+    networkId: '84532' // Default to Base Sepolia
   });
-  const [acceptRoyalty, setAcceptRoyalty] = useState(false);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -35,11 +56,235 @@ function CreateMeme() {
     }));
   };
 
-  const handleNext = () => {
-    if (!authenticated) {
-      login();
-    } else {
-      setStep(2);
+  const uploadToPinata = async (file: File): Promise<string> => {
+    try {
+      console.log('Starting upload to Pinata...');
+      
+      // Create form data
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Log headers (without showing full credentials)
+      console.log('Upload headers check:', {
+        hasApiKey: !!PINATA_API_KEY,
+        hasSecretKey: !!PINATA_SECRET_KEY,
+        contentType: 'multipart/form-data'
+      });
+
+      // Upload to Pinata
+      const res = await axios.post("https://api.pinata.cloud/pinning/pinFileToIPFS", formData, {
+        headers: {
+          'Content-Type': `multipart/form-data`,
+          'pinata_api_key': PINATA_API_KEY,
+          'pinata_secret_api_key': PINATA_SECRET_KEY
+        }
+      });
+
+      // Return the IPFS hash
+      const ipfsHash = `ipfs://${res.data.IpfsHash}`;
+      console.log('Upload successful. IPFS Hash:', ipfsHash);
+      return ipfsHash;
+    } catch (error: any) {
+      console.error('Detailed upload error:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      throw new Error(`Failed to upload image to IPFS: ${error.response?.data?.message || error.message}`);
+    }
+  };
+
+  const testPinataConnection = async () => {
+    try {
+      console.log('Testing Pinata connection with credentials:', {
+        hasApiKey: !!PINATA_API_KEY,
+        apiKeyLength: PINATA_API_KEY?.length,
+        hasSecretKey: !!PINATA_SECRET_KEY,
+        secretKeyLength: PINATA_SECRET_KEY?.length
+      });
+
+      const res = await axios.get("https://api.pinata.cloud/data/testAuthentication", {
+        headers: {
+          'pinata_api_key': PINATA_API_KEY,
+          'pinata_secret_api_key': PINATA_SECRET_KEY
+        }
+      });
+
+      console.log('Pinata Connection Test Response:', res.data);
+      alert('Pinata Connection Test Successful! Check console for details.');
+    } catch (error: any) {
+      console.error('Pinata Connection Test Failed:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      alert(`Pinata Connection Test Failed: ${error.response?.data?.message || error.message}`);
+    }
+  };
+
+  const switchToBaseSepolia = async (provider: any) => {
+    try {
+      // Try switching to Base Sepolia
+      await provider.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: BASE_SEPOLIA_PARAMS.chainId }],
+      });
+    } catch (switchError: any) {
+      // If the chain hasn't been added to MetaMask, add it
+      if (switchError.code === 4902) {
+        try {
+          await provider.request({
+            method: 'wallet_addEthereumChain',
+            params: [BASE_SEPOLIA_PARAMS],
+          });
+        } catch (addError) {
+          console.error('Error adding Base Sepolia network:', addError);
+          throw new Error('Could not add Base Sepolia network to your wallet');
+        }
+      } else {
+        console.error('Error switching to Base Sepolia:', switchError);
+        throw new Error('Could not switch to Base Sepolia network');
+      }
+    }
+  };
+
+  const submitMeme = async () => {
+    if (!imageFile || !authenticated || !wallets?.[0]) {
+      alert('Please connect your wallet first');
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+
+      // Log contract address
+      console.log('Contract address from env:', ARTIX_CONTRACT_ADDRESS);
+      
+      // 1. Upload image to IPFS via Pinata
+      const ipfsHash = await uploadToPinata(imageFile);
+      console.log('IPFS Upload successful:', ipfsHash);
+
+      // 2. Get wallet and provider
+      const wallet = wallets[0];
+      
+      // Request wallet connection if not already connected
+      if (!wallet.address) {
+        await wallet.connect();
+      }
+
+      // Get the provider
+      const provider = await wallet.getEthereumProvider();
+      
+      if (!provider) {
+        throw new Error('No provider available');
+      }
+
+      // Switch to Base Sepolia network first
+      await switchToBaseSepolia(provider);
+
+      // 3. Create ethers provider and signer
+      const ethersProvider = new ethers.providers.Web3Provider(provider);
+      await ethersProvider.send("eth_requestAccounts", []); // Explicitly request accounts
+      const signer = ethersProvider.getSigner();
+      const signerAddress = await signer.getAddress();
+      console.log('Signer address:', signerAddress);
+
+      // Get the current network
+      const network = await ethersProvider.getNetwork();
+      console.log('Current network:', network);
+
+      // Verify we're on Base Sepolia
+      if (network.chainId !== 84532) {
+        throw new Error('Please make sure you are connected to Base Sepolia network');
+      }
+
+      // Log contract verification attempt
+      console.log('Attempting to verify contract at address:', ARTIX_CONTRACT_ADDRESS);
+      
+      // Verify contract code exists
+      const code = await ethersProvider.getCode(ARTIX_CONTRACT_ADDRESS);
+      console.log('Contract bytecode:', code);
+      console.log('Contract exists:', code !== '0x');
+      
+      if (code === '0x') {
+        console.error('Contract not found. Please verify:');
+        console.error('1. Contract address is correct');
+        console.error('2. Contract is deployed to Base Sepolia');
+        console.error('3. You are connected to Base Sepolia network');
+        throw new Error('Contract not found at the specified address. Please check console for details.');
+      }
+
+      // 4. Create contract instance
+      console.log('Creating contract instance with ABI:', ArtixMemeContestABI);
+      const contract = new ethers.Contract(
+        ARTIX_CONTRACT_ADDRESS,
+        ArtixMemeContestABI,
+        signer
+      );
+
+      console.log('Submitting meme to contract with data:', {
+        ipfsHash,
+        title: formData.title,
+        description: formData.description,
+        socialLinks: formData.socialLinks,
+        networkId: 84532,
+        contractAddress: ARTIX_CONTRACT_ADDRESS,
+        signerAddress
+      });
+
+      // 5. Submit meme to contract
+      const tx = await contract.submitMeme(
+        ipfsHash,
+        formData.title,
+        formData.description,
+        formData.socialLinks,
+        84532, // Always use Base Sepolia network ID
+        { 
+          gasLimit: 500000
+        }
+      );
+
+      console.log('Transaction sent:', tx.hash);
+      
+      // 6. Wait for transaction confirmation
+      const receipt = await tx.wait();
+      console.log('Transaction confirmed:', receipt);
+      
+      // Reset form and show success
+      setImageFile(null);
+      setImagePreview(null);
+      setFormData({
+        title: '',
+        description: '',
+        socialLinks: '',
+        networkId: '84532'
+      });
+      
+      alert('Meme submitted successfully! Transaction hash: ' + tx.hash);
+    } catch (error: any) {
+      console.error('Detailed error:', {
+        message: error.message,
+        code: error.code,
+        data: error.data,
+        transaction: error.transaction,
+      });
+      
+      let errorMessage = 'Error submitting meme: ';
+      if (error.code === 'UNPREDICTABLE_GAS_LIMIT') {
+        errorMessage += 'Transaction might fail. Please check your inputs and try again.';
+      } else if (error.code === 'INSUFFICIENT_FUNDS') {
+        errorMessage += 'Insufficient funds for transaction. You need Base Sepolia ETH.';
+      } else if (error.message.includes('user rejected')) {
+        errorMessage += 'Transaction was rejected.';
+      } else if (error.message.includes('network')) {
+        errorMessage += 'Please make sure you are connected to Base Sepolia network.';
+      } else {
+        errorMessage += error.message || 'Unknown error';
+      }
+      
+      alert(errorMessage);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -52,234 +297,141 @@ function CreateMeme() {
             Create Your Meme
           </h1>
           <p className="text-base text-gray-600">
-            When your meme completes its bonding curve you receive XYZ
+            Submit your meme to the Artix Meme Contest
           </p>
-        </div>
-
-        {/* Progress Steps */}
-        <div className="flex items-center justify-between mb-12">
-          <div className="flex-1 relative">
-            <div className={`h-0.5 absolute left-0 right-0 top-1/2 -translate-y-1/2 ${step >= 1 ? 'bg-blue-600' : 'bg-gray-200'}`} />
-            <div className="relative flex items-center justify-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                step >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
-              }`}>
-                1
-              </div>
-              <span className="absolute -bottom-6 text-sm font-medium text-gray-900">Meme information</span>
-            </div>
-          </div>
-          <div className="flex-1 relative">
-            <div className={`h-0.5 absolute left-0 right-0 top-1/2 -translate-y-1/2 ${step >= 2 ? 'bg-blue-600' : 'bg-gray-200'}`} />
-            <div className="relative flex items-center justify-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                step >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
-              }`}>
-                2
-              </div>
-              <span className="absolute -bottom-6 text-sm font-medium text-gray-600">Connect wallet</span>
-            </div>
-          </div>
-          <div className="flex-1 relative">
-            <div className={`h-0.5 absolute left-0 right-0 top-1/2 -translate-y-1/2 ${step >= 3 ? 'bg-blue-600' : 'bg-gray-200'}`} />
-            <div className="relative flex items-center justify-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                step >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
-              }`}>
-                3
-              </div>
-              <span className="absolute -bottom-6 text-sm font-medium text-gray-600">AI Marketing</span>
-            </div>
-          </div>
+          {/* Test Pinata Connection Button */}
+          <button
+            onClick={testPinataConnection}
+            className="mt-4 px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded"
+          >
+            Test Pinata Connection
+          </button>
         </div>
 
         {/* Form Section */}
         <div className="bg-white p-8 shadow-sm">
-          {step === 1 && (
-            <>
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Upload Meme</h2>
-              
-              {/* Image Upload */}
-              <div className="mb-6">
-                {!imagePreview ? (
-                  <div className="relative">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                      id="meme-upload"
-                    />
-                    <label
-                      htmlFor="meme-upload"
-                      className="block w-full aspect-square bg-[#F3F4F6] border-2 border-dashed border-gray-300 rounded-sm cursor-pointer"
-                    >
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <div className="w-10 h-10 mb-2 text-gray-400">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                          </svg>
-                        </div>
-                        <button className="px-4 py-2 bg-blue-600 text-white text-sm font-medium">
-                          Upload Photo
-                        </button>
-                      </div>
-                    </label>
-                  </div>
-                ) : (
-                  <div className="relative w-full aspect-square bg-[#F3F4F6] rounded-sm">
-                    <img
-                      src={imagePreview}
-                      alt="Uploaded meme"
-                      className="w-full h-full object-contain"
-                    />
-                    <button
-                      onClick={handleRemoveImage}
-                      className="absolute top-4 right-4 px-3 py-1 bg-white/90 text-sm text-gray-900 rounded-full shadow-sm"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Form Fields */}
-              <div className="space-y-4">
-                <div>
-                  <input
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleInputChange}
-                    placeholder="Title"
-                    className="w-full px-4 py-2 bg-[#F3F4F6] border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-blue-600"
-                  />
-                </div>
-                <div>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    placeholder="Description"
-                    rows={4}
-                    className="w-full px-4 py-2 bg-[#F3F4F6] border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-blue-600"
-                  />
-                </div>
-                <div className="relative">
-                  <select
-                    name="supply"
-                    value={formData.supply}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 bg-[#F3F4F6] border border-gray-200 text-gray-600 text-sm focus:outline-none focus:border-blue-600 appearance-none pr-10"
-                  >
-                    <option value="">Select supply</option>
-                    <option value="100">100</option>
-                    <option value="500">500</option>
-                    <option value="1000">1000</option>
-                  </select>
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <svg className="w-5 h-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="relative">
-                  <select
-                    name="network"
-                    value={formData.network}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 bg-[#F3F4F6] border border-gray-200 text-gray-600 text-sm focus:outline-none focus:border-blue-600 appearance-none pr-10"
-                  >
-                    <option value="">Select network</option>
-                    <option value="ethereum">Ethereum</option>
-                    <option value="polygon">Polygon</option>
-                  </select>
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <svg className="w-5 h-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              {/* Royalty Agreement */}
-              <div className="mt-6 flex items-center gap-2">
+          {/* Image Upload */}
+          <div className="mb-6">
+            {!imagePreview ? (
+              <div className="relative">
                 <input
-                  type="checkbox"
-                  id="royalty"
-                  checked={acceptRoyalty}
-                  onChange={(e) => setAcceptRoyalty(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="meme-upload"
                 />
-                <label htmlFor="royalty" className="text-sm text-gray-600">
-                  I confirm that I accept the 3% royalty fee.
-                </label>
-              </div>
-
-              {/* Next Button */}
-              <button
-                onClick={handleNext}
-                className="mt-8 w-full py-3 bg-blue-600 text-white font-medium transition-colors"
-              >
-                {authenticated ? 'Next: AI Marketing' : 'Connect Wallet'}
-              </button>
-            </>
-          )}
-
-          {step === 2 && (
-            <div className="py-12">
-              <div className="text-center">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">AI Marketing by Artifact</h2>
-                <div className="max-w-md mx-auto space-y-4">
-                  <input
-                    type="text"
-                    placeholder="Your twitter handle"
-                    className="w-full px-4 py-2 bg-[#F3F4F6] border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-blue-600"
-                  />
-                  <textarea
-                    placeholder="Input??"
-                    rows={4}
-                    className="w-full px-4 py-2 bg-[#F3F4F6] border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-blue-600"
-                  />
-                  <div className="relative">
-                    <select
-                      className="w-full px-4 py-2 bg-[#F3F4F6] border border-gray-200 text-gray-600 text-sm focus:outline-none focus:border-blue-600 appearance-none pr-10"
-                    >
-                      <option value="">Input??</option>
-                    </select>
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <svg className="w-5 h-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                <label
+                  htmlFor="meme-upload"
+                  className="block w-full aspect-square bg-[#F3F4F6] border-2 border-dashed border-gray-300 rounded-sm cursor-pointer"
+                >
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div className="w-10 h-10 mb-2 text-gray-400">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                       </svg>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 p-4 bg-[#F3F4F6]">
-                    <span className="text-sm text-gray-600">Smart contract transaction confirmation required</span>
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div className="flex justify-between gap-4 mt-8">
-                    <button
-                      onClick={() => setStep(1)}
-                      className="flex-1 py-3 border border-blue-600 text-blue-600 font-medium"
-                    >
-                      Previous: Meme info
-                    </button>
-                    <button
-                      onClick={() => setStep(3)}
-                      className="flex-1 py-3 bg-blue-600 text-white font-medium"
-                    >
-                      Generate Meme NFT →
+                    <button className="px-4 py-2 bg-blue-600 text-white text-sm font-medium">
+                      Upload Meme Image
                     </button>
                   </div>
-                </div>
+                </label>
               </div>
+            ) : (
+              <div className="relative w-full aspect-square bg-[#F3F4F6] rounded-sm">
+                <img
+                  src={imagePreview}
+                  alt="Uploaded meme"
+                  className="w-full h-full object-contain"
+                />
+                <button
+                  onClick={handleRemoveImage}
+                  className="absolute top-4 right-4 px-3 py-1 bg-white/90 text-sm text-gray-900 rounded-full shadow-sm"
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Form Fields */}
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+                Title
+              </label>
+              <input
+                id="title"
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleInputChange}
+                placeholder="Enter meme title"
+                className="w-full px-4 py-2 bg-[#F3F4F6] border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-blue-600"
+              />
             </div>
-          )}
+            
+            <div>
+              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                Description
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                placeholder="Enter meme description"
+                rows={4}
+                className="w-full px-4 py-2 bg-[#F3F4F6] border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-blue-600"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="socialLinks" className="block text-sm font-medium text-gray-700 mb-1">
+                Social Links
+              </label>
+              <input
+                id="socialLinks"
+                type="text"
+                name="socialLinks"
+                value={formData.socialLinks}
+                onChange={handleInputChange}
+                placeholder="Enter your social media links"
+                className="w-full px-4 py-2 bg-[#F3F4F6] border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-blue-600"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="networkId" className="block text-sm font-medium text-gray-700 mb-1">
+                Network
+              </label>
+              <select
+                id="networkId"
+                name="networkId"
+                value={formData.networkId}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 bg-[#F3F4F6] border border-gray-200 text-gray-600 text-sm focus:outline-none focus:border-blue-600"
+              >
+                <option value="84532">Base Sepolia</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            onClick={authenticated ? submitMeme : login}
+            disabled={isUploading}
+            className={`mt-8 w-full py-3 ${
+              isUploading ? 'bg-gray-400' : 'bg-blue-600'
+            } text-white font-medium transition-colors`}
+          >
+            {isUploading 
+              ? 'Uploading...' 
+              : authenticated 
+                ? 'Submit Meme' 
+                : 'Connect Wallet to Submit'
+            }
+          </button>
         </div>
       </div>
     </div>
