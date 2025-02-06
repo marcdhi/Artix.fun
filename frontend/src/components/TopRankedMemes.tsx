@@ -1,60 +1,70 @@
-import { motion } from 'framer-motion';
+import MemeCard from './MemeCard';
 
 function TopRankedMemes() {
   const memes = [
-    { id: 1, title: 'Epic Meme 1', votes: 2453, creator: '0x1234...5678' },
-    { id: 2, title: 'Viral Meme 2', votes: 2198, creator: '0x8765...4321' },
-    { id: 3, title: 'Trending Meme 3', votes: 1876, creator: '0x9876...1234' },
-    { id: 4, title: 'Popular Meme 4', votes: 1654, creator: '0x4567...8901' },
+    { id: 1, title: 'Title of the meme', username: "User's username", votes: 0, progress: '+9.6% progress', status: 'voting_open' as const, userCount: 62 },
+    { id: 2, title: 'Title of the meme', username: "User's username", votes: 0, progress: '+9.6% progress', status: 'nft_minted' as const, userCount: 62 },
+    { id: 3, title: 'Title of the meme', username: "User's username", votes: 0, progress: '+9.6% progress', status: 'voting_closed' as const, userCount: 62 },
+    { id: 4, title: 'Title of the meme', username: "User's username", votes: 0, progress: '+9.6% progress', status: 'voting_open' as const, userCount: 62 },
   ];
 
   return (
-    <section className="w-full py-8 px-4">
-      <div className="text-center mb-16">
-        <h2 className="text-3xl sm:text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
+    <section className="w-full py-12">
+      {/* Header */}
+      <div className="text-center mb-8">
+        <h2 className="text-[32px] font-bold mb-2 text-gray-900">
           Top Ranked Memes
         </h2>
-        <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto px-4">Most voted memes of all time</p>
+        <p className="text-base text-gray-600">
+          Vote the memes and get rewarded
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 w-full">
-        {memes.map((meme, index) => (
-          <motion.div
-            key={meme.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-            whileHover={{ y: -8, scale: 1.02 }}
-            className="bg-gradient-to-b from-white/10 to-white/5 rounded-2xl overflow-hidden border border-white/10 hover:border-white/20 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300"
-          >
-            {/* Image Placeholder */}
-            <div className="aspect-square bg-gradient-to-br from-purple-500/20 to-blue-500/20 relative group">
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              
-              {/* Vote Count Badge */}
-              <div className="absolute top-6 right-6 px-4 py-2 bg-black/50 backdrop-blur-xl rounded-full text-sm font-medium shadow-lg">
-                {meme.votes.toLocaleString()} votes
-              </div>
+      {/* Filters */}
+      <div className="max-w-7xl mx-auto px-4 mb-8">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          {/* Left Filters */}
+          <div className="flex items-center gap-4">
+            <span className="text-gray-600">Filter</span>
+            <div className="flex gap-4">
+              <button className="text-gray-900 font-medium">Top rated</button>
+              <button className="text-gray-600">New</button>
+              <button className="text-gray-600">NFT</button>
             </div>
+          </div>
 
-            {/* Content */}
-            <div className="p-8">
-              <h3 className="text-lg font-semibold mb-4 truncate">{meme.title}</h3>
-              <p className="text-sm text-gray-400 truncate mb-8">
-                by {meme.creator}
-              </p>
-              
-              {/* Action Button */}
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-full py-3.5 px-6 bg-white/5 hover:bg-white/10 rounded-xl font-medium text-sm transition-all duration-300 hover:shadow-lg"
-              >
-                View Details
-              </motion.button>
+          {/* Search Dropdown */}
+          <div className="relative min-w-[240px] bg-[#F3F4F6]">
+            <div className="flex items-center px-4 py-2">
+              <svg className="w-5 h-5 text-gray-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+              </svg>
+              <span className="text-gray-600">Placeholder</span>
+              <svg className="w-5 h-5 text-gray-400 ml-auto" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
             </div>
-          </motion.div>
-        ))}
+          </div>
+
+          {/* Right Filters */}
+          <div className="flex items-center gap-4">
+            <span className="text-gray-600">Voting status</span>
+            <div className="flex gap-4">
+              <button className="text-gray-600">Voting open</button>
+              <button className="text-gray-600">NFT Minted</button>
+              <button className="text-gray-600">Voting closed</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Memes Grid */}
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {memes.map((meme) => (
+            <MemeCard key={meme.id} {...meme} />
+          ))}
+        </div>
       </div>
     </section>
   );

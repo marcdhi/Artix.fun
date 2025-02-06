@@ -1,166 +1,113 @@
-import LoginButton from './LoginButton';
 import Frontrunners from './Frontrunners';
 import TopRankedMemes from './TopRankedMemes';
 import Leaderboard from './Leaderboard';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0A0A0A] via-[#1a1a1a] to-[#0A0A0A] text-white font-['Inter']">
-      {/* Navbar */}
-      <header className="sticky top-0 border-b border-white/5 bg-black/20 backdrop-blur-xl z-50">
-        <div className="flex justify-center w-full">
-          <div className="w-full max-w-[1400px] px-6 lg:px-12">
-            <div className="flex items-center justify-between h-24">
-              {/* Logo */}
-              <motion.div 
-                className="flex items-center gap-4 cursor-pointer"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+    <div className="min-h-screen bg-[#F8F9FB] text-gray-900 font-['Inter']">
+      {/* Hero Section */}
+      <section className="pt-32 pb-20 px-6">
+        <div className="max-w-screen-xl mx-auto">
+          <div className="max-w-3xl">
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6"
+            >
+              Artix.fun – Meme Contest DAO Platform
+            </motion.h1>
+            
+            <motion.h2 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-6"
+            >
+              Own, Vote & Earn from Memes on the Blockchain!
+            </motion.h2>
+
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="text-lg text-gray-600 mb-12 max-w-2xl"
+            >
+              A decentralized platform where memes gain value and their creators get rewarded.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="flex flex-col sm:flex-row gap-4"
+            >
+              <Link
+                to="/create"
+                className="px-6 py-3 bg-blue-600 text-white font-medium text-base hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2"
               >
-                <img src="/logo.png" alt="Logo" className="w-10 h-10" />
-                <span className="text-2xl font-semibold bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
-                  Artix.fun
-                </span>
-              </motion.div>
-              
-              {/* Center Navigation Links */}
-              <nav className="hidden md:flex items-center gap-12">
-                <motion.a 
-                  href="#explore"
-                  whileHover={{ scale: 1.05 }}
-                  className="text-base font-medium text-gray-300 hover:text-white transition-colors"
+                Create and Mint Memes
+                <svg 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
                 >
-                  Explore
-                </motion.a>
-                <motion.a 
-                  href="#trending"
-                  whileHover={{ scale: 1.05 }}
-                  className="text-base font-medium text-gray-300 hover:text-white transition-colors"
-                >
-                  Trending
-                </motion.a>
-                <motion.a 
-                  href="#about"
-                  whileHover={{ scale: 1.05 }}
-                  className="text-base font-medium text-gray-300 hover:text-white transition-colors"
-                >
-                  About
-                </motion.a>
-              </nav>
-              
-              {/* Right Side */}
-              <div className="flex items-center gap-6">
-                <motion.button 
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-6 py-2.5 text-base font-medium bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-full transition-all duration-300 shadow-lg hover:shadow-blue-500/25"
-                >
-                  Create
-                </motion.button>
-                <LoginButton />
-              </div>
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </Link>
+              <Link
+                to="/explore"
+                className="px-6 py-3 bg-gray-900 text-white font-medium text-base hover:bg-gray-800 transition-colors duration-200"
+              >
+                Explore Memes
+              </Link>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <motion.section 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.6 }}
+        className="py-20 bg-white border-t border-gray-200"
+      >
+        <div className="max-w-screen-xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <h3 className="text-4xl font-bold text-gray-900 mb-2">10K+</h3>
+              <p className="text-gray-600">Memes Created</p>
+            </div>
+            <div className="text-center">
+              <h3 className="text-4xl font-bold text-gray-900 mb-2">50K+</h3>
+              <p className="text-gray-600">Active Users</p>
+            </div>
+            <div className="text-center">
+              <h3 className="text-4xl font-bold text-gray-900 mb-2">100K+</h3>
+              <p className="text-gray-600">Total Votes</p>
             </div>
           </div>
         </div>
-      </header>
+      </motion.section>
 
-      {/* Main Content */}
-      <main className="flex flex-col items-center w-full">
-        <div className="w-full max-w-[1400px] px-6 lg:px-12">
-          {/* Hero Section */}
-          <motion.section 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="flex flex-col items-center justify-center min-h-[calc(100vh-6rem)] py-24"
-          >
-            <div className="w-full max-w-5xl mx-auto">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                className="text-center"
-              >
-                <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-8 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 text-transparent bg-clip-text leading-tight">
-                  Artix.fun – Meme Contest DAO Platform
-                </h1>
-                <p className="text-2xl sm:text-3xl text-gray-300 leading-relaxed max-w-3xl mx-auto">
-                  Own, Vote & Earn from Memes on the Blockchain!
-                </p>
-              </motion.div>
-              <motion.div 
-                className="mt-16 flex justify-center"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-              >
-                <div className="flex flex-col sm:flex-row gap-6 justify-center items-center w-full max-w-2xl">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-full sm:w-auto px-10 py-4 text-lg font-medium bg-gradient-to-r from-blue-500 to-purple-500 rounded-full shadow-lg hover:shadow-purple-500/25 transition-all duration-300"
-                  >
-                    Get Started
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-full sm:w-auto px-10 py-4 text-lg font-medium border-2 border-white/20 hover:border-white/40 rounded-full transition-all duration-300"
-                  >
-                    Learn More
-                  </motion.button>
-                </div>
-              </motion.div>
-            </div>
-          </motion.section>
-
-          {/* Content Sections */}
-          <div className="flex flex-col items-center pb-32">
-            {/* Frontrunners Section */}
-            <section className="w-full mb-40">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="w-full bg-gradient-to-b from-white/[0.03] to-transparent p-16 sm:p-20 rounded-[2.5rem] border border-white/5 shadow-2xl"
-              >
-                <Frontrunners />
-              </motion.div>
-            </section>
-
-            {/* Top Ranked Memes Section */}
-            <section className="w-full mb-40">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                className="w-full bg-gradient-to-b from-white/[0.03] to-transparent p-16 sm:p-20 rounded-[2.5rem] border border-white/5 shadow-2xl"
-              >
-                <TopRankedMemes />
-              </motion.div>
-            </section>
-
-            {/* Leaderboard Section */}
-            <section className="w-full mb-40">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
-                className="w-full bg-gradient-to-b from-white/[0.03] to-transparent p-16 sm:p-20 rounded-[2.5rem] border border-white/5 shadow-2xl"
-              >
-                <Leaderboard />
-              </motion.div>
-            </section>
-          </div>
+      {/* Featured Sections */}
+      <div className="py-20 px-6">
+        <div className="max-w-screen-xl mx-auto space-y-20">
+          <Frontrunners />
+          <TopRankedMemes />
+          <Leaderboard />
         </div>
-      </main>
-
-      {/* Footer Gradient */}
-      <div className="h-48 bg-gradient-to-t from-purple-500/10 to-transparent" />
+      </div>
     </div>
   );
 }
 
 export default Home;
-

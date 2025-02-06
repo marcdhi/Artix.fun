@@ -1,73 +1,120 @@
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+interface LeaderboardItem {
+  votes: string;
+  title: string;
+  marketcap: string;
+  marketcapChange: string;
+  volume24h: string;
+  netAssetValue: string;
+}
 
 function Leaderboard() {
-  const users = [
-    { id: 1, address: '0x1234...5678', points: 12500, memes: 45, rank: 1 },
-    { id: 2, address: '0x8765...4321', points: 10200, memes: 38, rank: 2 },
-    { id: 3, address: '0x9876...1234', points: 8900, memes: 32, rank: 3 },
-    { id: 4, address: '0x4567...8901', points: 7600, memes: 28, rank: 4 },
-    { id: 5, address: '0x3456...7890', points: 6300, memes: 25, rank: 5 },
+  const leaderboardData: LeaderboardItem[] = [
+    {
+      votes: '165/600',
+      title: 'Title',
+      marketcap: '$26,362.32',
+      marketcapChange: '-14.40%',
+      volume24h: '$1,412,265.32',
+      netAssetValue: '$1,412,265.32'
+    },
+    {
+      votes: '165/600',
+      title: 'Title',
+      marketcap: '$26,362.32',
+      marketcapChange: '-14.40%',
+      volume24h: '$1,412,265.32',
+      netAssetValue: '$1,412,265.32'
+    },
+    {
+      votes: '165/600',
+      title: 'Title',
+      marketcap: '$26,362.32',
+      marketcapChange: '-14.40%',
+      volume24h: '$1,412,265.32',
+      netAssetValue: '$1,412,265.32'
+    },
+    {
+      votes: '165/600',
+      title: 'Title',
+      marketcap: '$26,362.32',
+      marketcapChange: '-14.40%',
+      volume24h: '$1,412,265.32',
+      netAssetValue: '$1,412,265.32'
+    },
+    {
+      votes: '165/600',
+      title: 'Title',
+      marketcap: '$26,362.32',
+      marketcapChange: '-14.40%',
+      volume24h: '$1,412,265.32',
+      netAssetValue: '$1,412,265.32'
+    }
   ];
 
   return (
-    <section className="w-full py-8">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl sm:text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
-          Top Contributors
-        </h2>
-        <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto">Most active members in our community</p>
-      </div>
+    <section className="w-full py-12">
+      {/* Header */}
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-[32px] font-bold text-gray-900">Leaderboard</h2>
+          <div className="flex items-center gap-4">
+            <div className="flex gap-2">
+              <button className="px-3 py-1 bg-[#F3F4F6] text-gray-900 text-sm">1 H</button>
+              <button className="px-3 py-1 text-gray-600 text-sm">24 H</button>
+            </div>
+            <div className="flex gap-2">
+              <button className="p-1 text-gray-400">
+                <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </button>
+              <span className="text-sm text-gray-600">Page</span>
+              <button className="p-1 text-gray-400">
+                <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
 
-      <div className="w-full overflow-hidden rounded-2xl border border-white/10 backdrop-blur-sm shadow-xl">
-        <div className="w-full overflow-x-auto">
-          <table className="w-full min-w-[800px]">
+
+
+        {/* Table */}
+        <div className="w-full">
+          <table className="w-full">
             <thead>
-              <tr className="bg-white/5">
-                <th className="px-8 py-6 text-left text-sm font-semibold text-gray-300">Rank</th>
-                <th className="px-8 py-6 text-left text-sm font-semibold text-gray-300">Address</th>
-                <th className="px-8 py-6 text-left text-sm font-semibold text-gray-300">Points</th>
-                <th className="px-8 py-6 text-left text-sm font-semibold text-gray-300">Memes</th>
-                <th className="px-8 py-6 text-right text-sm font-semibold text-gray-300">Action</th>
+              <tr className="border-b border-gray-200">
+                <th className="py-4 text-left text-sm font-medium text-gray-600">Votes</th>
+                <th className="py-4 text-left text-sm font-medium text-gray-600">Meme</th>
+                <th className="py-4 text-left text-sm font-medium text-gray-600">Marketcap</th>
+                <th className="py-4 text-left text-sm font-medium text-gray-600">Marketcap %</th>
+                <th className="py-4 text-left text-sm font-medium text-gray-600">24H Volume</th>
+                <th className="py-4 text-left text-sm font-medium text-gray-600">Net Asset Value</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
-              {users.map((user, index) => (
-                <motion.tr
-                  key={user.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="hover:bg-white/5 transition-colors duration-200"
-                >
-                  <td className="px-8 py-6">
-                    <div className={`
-                      w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold shadow-lg
-                      ${user.rank === 1 ? 'bg-yellow-500/20 text-yellow-300' :
-                        user.rank === 2 ? 'bg-gray-300/20 text-gray-300' :
-                        user.rank === 3 ? 'bg-orange-500/20 text-orange-300' :
-                        'bg-white/10 text-gray-400'}
-                    `}>
-                      {user.rank}
-                    </div>
-                  </td>
-                  <td className="px-8 py-6 font-medium">{user.address}</td>
-                  <td className="px-8 py-6">
-                    <span className="text-green-400 font-medium">{user.points.toLocaleString()}</span>
-                  </td>
-                  <td className="px-8 py-6 text-gray-300">{user.memes}</td>
-                  <td className="px-8 py-6 text-right">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="px-6 py-2.5 text-sm font-medium bg-white/5 hover:bg-white/10 rounded-full transition-all duration-300 hover:shadow-lg"
-                    >
-                      View Profile
-                    </motion.button>
-                  </td>
-                </motion.tr>
+            <tbody className="divide-y divide-gray-100">
+              {leaderboardData.map((item, index) => (
+                <tr key={index} className="hover:bg-gray-50 cursor-pointer">
+                  <td className="py-4 text-sm text-gray-900">{item.votes}</td>
+                  <td className="py-4 text-sm text-gray-900">{item.title}</td>
+                  <td className="py-4 text-sm text-gray-900">{item.marketcap}</td>
+                  <td className="py-4 text-sm text-red-500">{item.marketcapChange}</td>
+                  <td className="py-4 text-sm text-gray-900">{item.volume24h}</td>
+                  <td className="py-4 text-sm text-gray-900">{item.netAssetValue}</td>
+                </tr>
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Create Memes Button */}
+        <div className="mt-8 flex justify-center">
+          <Link to="/create" className="px-6 py-3 bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors">
+            Create Memes
+          </Link>
         </div>
       </div>
     </section>

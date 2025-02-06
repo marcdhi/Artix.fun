@@ -1,23 +1,17 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
 
-* {
+/* * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
 body {
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  width: 100%;
-  overflow-x: hidden;
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #0A0A0A;
-  color: white;
+  background-color: white;
 }
 
 #root {
@@ -25,18 +19,18 @@ body {
   min-height: 100vh;
 }
 
-/* Remove default button styles */
-button {
+/* Reset button styles */
+/* button {
   all: unset;
   cursor: pointer;
   font-family: inherit;
-}
+} */
 
-/* Remove default link styles */
-a {
+/* Reset link styles */
+/* a {
   text-decoration: none;
   color: inherit;
-}
+} */
 
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -58,7 +52,7 @@ h1 {
   line-height: 1.1;
 }
 
-@media (prefers-color-scheme: light) {
+/* @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
     background-color: #ffffff;
@@ -69,4 +63,4 @@ h1 {
   button {
     background-color: #f9f9f9;
   }
-}
+}  */
