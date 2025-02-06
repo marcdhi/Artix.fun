@@ -1,4 +1,12 @@
-# Artix.fun 
+<h1 align="center">Artix.fun</h1>
+
+<p align="center">
+  <a href="" style="color: #a77dff">Artix.fun</a> | <a href="" style="color: #a77dff">Pitchdeck</a> | <a href="" style="color: #a77dff">Base(NFT&Vote Contract)</a> | <a href="" style="color: #a77dff">Privy(for auth&wallets)</a> | <a href="" style="color: #a77dff">Autonome or Gaia(AI agent)</a>
+</p>
+
+<p align="center">Meme Contest DAO Platform</p>
+
+---
 
 # Frontend
 
