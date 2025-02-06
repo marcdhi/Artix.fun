@@ -7,6 +7,7 @@ import ArtixMemeContestABI from '../abi/ArtixMemeContest.json';
 const ARTIX_CONTRACT_ADDRESS = import.meta.env.VITE_ARTIX_CONTRACT_ADDRESS;
 const PINATA_API_KEY = import.meta.env.VITE_PINATA_API_KEY;
 const PINATA_SECRET_KEY = import.meta.env.VITE_PINATA_SECRET_KEY;
+const VENICE_API_KEY = import.meta.env.VITE_VENICE_API_KEY;
 
 // Base Sepolia network parameters
 const BASE_SEPOLIA_PARAMS = {
@@ -29,6 +30,9 @@ function CreateMeme() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [acceptRoyalty, setAcceptRoyalty] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [uploadMethod, setUploadMethod] = useState<'manual' | 'ai'>('manual');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -328,6 +332,83 @@ function CreateMeme() {
     }
   };
 
+  const generateAIMeme = async () => {
+    if (!aiPrompt) return;
+    
+    try {
+      setIsGeneratingAI(true);
+      
+      const options = {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${VENICE_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: "fluently-xl",
+          prompt: aiPrompt,
+          width: 1024,
+          height: 1024,
+          steps: 30,
+          hide_watermark: false,
+          return_binary: false,
+          seed: Math.floor(Math.random() * 1000000),
+          cfg_scale: 7,
+          style_preset: "3D Model",
+          negative_prompt: "blurry, low quality, distorted",
+          safe_mode: false
+        })
+      };
+
+      const response = await fetch('https://api.venice.ai/api/v1/image/generate', options);
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      // Log the response to see what we're getting
+      console.log('Venice API Response:', data);
+
+      // Check if we have the base64 image data
+      if (!data.images?.[0]) {
+        throw new Error('No image data in response');
+      }
+
+      // Get the base64 image data
+      const base64Image = data.images[0];
+      console.log('Got base64 image data');
+
+      // Convert base64 to blob
+      const byteCharacters = atob(base64Image);
+      const byteNumbers = new Array(byteCharacters.length);
+      
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'image/png' });
+      console.log('Converted to blob:', blob);
+      
+      // Create a File object from the blob
+      const file = new File([blob], 'ai-generated-meme.png', { type: 'image/png' });
+      
+      // Create an object URL for preview
+      const previewUrl = URL.createObjectURL(blob);
+      console.log('Preview URL:', previewUrl);
+
+      setImageFile(file);
+      setImagePreview(previewUrl);
+      
+    } catch (error) {
+      console.error('Error generating AI meme:', error);
+      alert('Failed to generate AI meme. Please try again.');
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
   const handleNext = () => {
     if (!authenticated) {
       login();
@@ -351,13 +432,6 @@ function CreateMeme() {
           <p className="text-base text-gray-600">
             Submit your meme to the Artix Meme Contest
           </p>
-          {/* Test Pinata Connection Button */}
-          {/* <button
-            onClick={testPinataConnection}
-            className="mt-4 px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded"
-          >
-            Test Pinata Connection
-          </button> */}
         </div>
 
         {/* Progress Steps */}
@@ -403,9 +477,58 @@ function CreateMeme() {
             <>
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Upload Meme</h2>
               
-              {/* Image Upload */}
+              {/* Upload Method Selection */}
               <div className="mb-6">
-                {!imagePreview ? (
+                <div className="flex gap-4 mb-4">
+                  <button
+                    onClick={() => setUploadMethod('manual')}
+                    className={`flex-1 py-2 px-4 rounded ${
+                      uploadMethod === 'manual'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-600'
+                    }`}
+                  >
+                    Manual Upload
+                  </button>
+                  <button
+                    onClick={() => setUploadMethod('ai')}
+                    className={`flex-1 py-2 px-4 rounded ${
+                      uploadMethod === 'ai'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-600'
+                    }`}
+                  >
+                    AI Generate
+                  </button>
+                </div>
+
+                {uploadMethod === 'ai' && !imagePreview && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Describe your meme
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={aiPrompt}
+                        onChange={(e) => setAiPrompt(e.target.value)}
+                        placeholder="E.g., A funny cat wearing sunglasses and riding a skateboard"
+                        className="flex-1 px-4 py-2 bg-[#F3F4F6] border border-gray-200 rounded text-gray-900 text-sm focus:outline-none focus:border-blue-600"
+                      />
+                      <button
+                        onClick={generateAIMeme}
+                        disabled={!aiPrompt || isGeneratingAI}
+                        className={`px-4 py-2 rounded text-white text-sm font-medium ${
+                          !aiPrompt || isGeneratingAI ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'
+                        }`}
+                      >
+                        {isGeneratingAI ? 'Generating...' : 'Generate'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {uploadMethod === 'manual' && !imagePreview ? (
                   <div className="relative">
                     <input
                       type="file"
@@ -430,7 +553,7 @@ function CreateMeme() {
                       </div>
                     </label>
                   </div>
-                ) : (
+                ) : imagePreview && (
                   <div className="relative w-full aspect-square bg-[#F3F4F6] rounded-sm">
                     <img
                       src={imagePreview}
