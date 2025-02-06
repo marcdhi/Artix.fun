@@ -41,12 +41,22 @@ class MemeContestService {
 
     /**
      * Submit a meme to a contest
-     * @param {number} contestId - ID of the contest
-     * @param {string} memeURI - IPFS URI of the meme
+     * @param {string} ipfsHash - IPFS URI of the meme
+     * @param {string} title - Meme title
+     * @param {string} description - Meme description
+     * @param {string} socialLinks - Creator's social media links
+     * @param {number} networkId - Target network ID
      * @returns {Promise<ethers.ContractTransaction>}
      */
-    async submitMeme(contestId, memeURI) {
-        return await this.contract.submitMeme(contestId, memeURI);
+    async submitMeme(ipfsHash, title, description, socialLinks, networkId) {
+        return await this.contract.submitMeme(
+            ipfsHash,
+            title,
+            description,
+            socialLinks,
+            networkId,
+            { gasLimit: 500000 }
+        );
     }
 
     /**
@@ -180,8 +190,11 @@ async function main() {
         // Submit a meme
         console.log("Submitting meme...");
         const submitTx = await memeContest.submitMeme(
-            0,
-            "ipfs://QmYourMemeHash" // TODO: Replace with actual meme hash
+            "ipfs://QmYourMemeHash", // TODO: Replace with actual meme hash
+            "Meme Title",
+            "Meme Description",
+            "https://twitter.com/meme_creator",
+            1 // TODO: Replace with actual network ID
         );
         await submitTx.wait();
 
