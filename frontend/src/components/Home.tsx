@@ -133,8 +133,8 @@ const Home = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-black text-white">
-      <div className="max-w-7xl mx-auto px-4">
+    <div className="relative min-h-screen bg-black text-white rounded-t-4xl bg-gradient-to-b from-[#020B44] via-black to-black">
+      <div className="max-w-7xl mx-auto px-4 ">
         {/* Hero Section */}
         <div className="pt-8 pb-8">
           <h3 className="text-yellow-400 text-xl font-medium mb-2">
