@@ -1,113 +1,193 @@
-import Frontrunners from './Frontrunners';
-import TopRankedMemes from './TopRankedMemes';
-import Leaderboard from './Leaderboard';
-import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
-function Home() {
+const Home = () => {
   return (
-    <div className="min-h-screen bg-[#F8F9FB] text-gray-900 font-['Inter']">
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6">
-        <div className="max-w-screen-xl mx-auto">
-          <div className="max-w-3xl">
-            <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6"
-            >
-              Artix.fun – Meme Contest DAO Platform
-            </motion.h1>
-            
-            <motion.h2 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-6"
-            >
-              Own, Vote & Earn from Memes on the Blockchain!
-            </motion.h2>
+    <div className="relative min-h-screen bg-black text-white">
+      <div className="max-w-7xl mx-auto px-4">
+        {/* Hero Section */}
+        <div className="pt-8 pb-8">
+          <h3 className="text-yellow-400 text-xl font-medium mb-2">
+            Artix.fun
+          </h3>
+          <h1 className="text-[80px] font-bold mb-2 font-['Inter'] text-[#f0f1f3]">
+            Meme Contest DAO Platform
+          </h1>
+          <p className="text-gray-400 text-lg mb-4">
+            Own, Vote & Earn from Memes on the <br/ > Blockchain!
+          </p>
+          <Link
+            to="/create"
+            className="inline-flex items-center bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded-full text-sm font-medium"
+          >
+            + create
+          </Link>
+        </div>
 
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="text-lg text-gray-600 mb-12 max-w-2xl"
-            >
-              A decentralized platform where memes gain value and their creators get rewarded.
-            </motion.p>
+        {/* Best of Memes Section */}
+        <div className="mb-20">
+          <h2 className="text-4xl font-bold text-center mb-16 font-['Inter']">Best of Memes</h2>
+          <div className="flex justify-center items-center gap-6 relative px-4">
+            {/* Second Place */}
+            <div className="relative w-[300px] h-[400px] mt-8">
+              <div className="absolute -top-4 right-4 z-10 w-16 h-16 flex items-center justify-center">
+                <div className="absolute inset-0 bg-blue-600 rounded-full"></div>
+                <span className="relative text-yellow-400 text-5xl font-bold">2</span>
+              </div>
+              <div className="relative h-full rounded-[20px] overflow-hidden group-hover:scale-[1.02] transition-transform">
+                <div 
+                  className="h-full w-full"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(183, 233, 247, 0.2), rgba(219, 243, 250, 0.2), rgba(243, 231, 254, 0.2))',
+                  }}
+                />
+                <div className="absolute bottom-0 left-0 right-0">
+                  <div className="px-4 py-3 bg-black/80 border-b-2 border-yellow-400 rounded-b-[20px]">
+                    <h3 className="text-white text-sm font-medium">This is a nice title</h3>
+                    <div className="flex items-center gap-4 mt-2">
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-400">👁 103</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-400">❤️ 1063</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-400">✨ NFT minted</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="flex flex-col sm:flex-row gap-4"
-            >
-              <Link
-                to="/create"
-                className="px-6 py-3 bg-blue-600 text-white font-medium text-base hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2"
-              >
-                Create and Mint Memes
-                <svg 
-                  width="16" 
-                  height="16" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                >
-                  <path d="M5 12h14M12 5l7 7-7 7"/>
-                </svg>
-              </Link>
-              <Link
-                to="/explore"
-                className="px-6 py-3 bg-gray-900 text-white font-medium text-base hover:bg-gray-800 transition-colors duration-200"
-              >
-                Explore Memes
-              </Link>
-            </motion.div>
+            {/* First Place */}
+            <div className="relative w-[300px] h-[400px] -mt-8">
+              <div className="absolute -top-4 right-4 z-10 w-16 h-16 flex items-center justify-center">
+                <div className="absolute inset-0 bg-blue-600 rounded-full"></div>
+                <span className="relative text-yellow-400 text-5xl font-bold">1</span>
+              </div>
+              <div className="relative h-full rounded-[20px] overflow-hidden group-hover:scale-[1.02] transition-transform">
+                <div 
+                  className="h-full w-full"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(183, 233, 247, 0.2), rgba(219, 243, 250, 0.2), rgba(243, 231, 254, 0.2))',
+                  }}
+                />
+                <div className="absolute bottom-0 left-0 right-0">
+                  <div className="px-4 py-3 bg-black/80 border-b-2 border-yellow-400 rounded-b-[20px]">
+                    <h3 className="text-white text-sm font-medium">This is a nice title</h3>
+                    <div className="flex items-center gap-4 mt-2">
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-400">👁 103</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-400">❤️ 1063</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-400">✨ NFT minted</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Third Place */}
+            <div className="relative w-[300px] h-[400px] mt-8">
+              <div className="absolute -top-4 right-4 z-10 w-16 h-16 flex items-center justify-center">
+                <div className="absolute inset-0 bg-blue-600 rounded-full"></div>
+                <span className="relative text-yellow-400 text-5xl font-bold">3</span>
+              </div>
+              <div className="relative h-full rounded-[20px] overflow-hidden group-hover:scale-[1.02] transition-transform">
+                <div 
+                  className="h-full w-full"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(183, 233, 247, 0.2), rgba(219, 243, 250, 0.2), rgba(243, 231, 254, 0.2))',
+                  }}
+                />
+                <div className="absolute bottom-0 left-0 right-0">
+                  <div className="px-4 py-3 bg-black/80 border-b-2 border-yellow-400 rounded-b-[20px]">
+                    <h3 className="text-white text-sm font-medium">This is a nice title</h3>
+                    <div className="flex items-center gap-4 mt-2">
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-400">👁 103</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-400">❤️ 1063</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-400">✨ NFT minted</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </section>
 
-      {/* Stats Section */}
-      <motion.section 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.6 }}
-        className="py-20 bg-white border-t border-gray-200"
-      >
-        <div className="max-w-screen-xl mx-auto px-6">
+        {/* Top Ranked Memes Section */}
+        <div>
+          <h2 className="text-4xl font-bold mb-12">Top Ranked Memes</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <h3 className="text-4xl font-bold text-gray-900 mb-2">10K+</h3>
-              <p className="text-gray-600">Memes Created</p>
-            </div>
-            <div className="text-center">
-              <h3 className="text-4xl font-bold text-gray-900 mb-2">50K+</h3>
-              <p className="text-gray-600">Active Users</p>
-            </div>
-            <div className="text-center">
-              <h3 className="text-4xl font-bold text-gray-900 mb-2">100K+</h3>
-              <p className="text-gray-600">Total Votes</p>
-            </div>
+            {[...Array(9)].map((_, index) => (
+              <div key={index} className="group">
+                <div 
+                  className="aspect-square rounded-xl overflow-hidden bg-gradient-to-br from-purple-400/20 to-blue-400/20 backdrop-blur-sm"
+                  style={{
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                  }}
+                >
+                  {/* Placeholder for meme image */}
+                </div>
+                <div className="mt-4">
+                  <p className="text-sm text-gray-300">This is a meme title</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs text-gray-500">1.2K votes</span>
+                    <span className="text-xs text-gray-500">•</span>
+                    <span className="text-xs text-gray-500">@creator</span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      </motion.section>
 
-      {/* Featured Sections */}
-      <div className="py-20 px-6">
-        <div className="max-w-screen-xl mx-auto space-y-20">
-          <Frontrunners />
-          <TopRankedMemes />
-          <Leaderboard />
+        {/* Leaderboard Section */}
+        <div className="mt-24 mb-16">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-4xl font-bold">Leaderboard</h2>
+            <Link 
+              to="/leaderboard"
+              className="text-yellow-400 hover:text-yellow-500 text-sm font-medium"
+            >
+              View All
+            </Link>
+          </div>
+          <div className="bg-[#1A1A1A] rounded-xl p-6">
+            <div className="grid grid-cols-6 gap-4 text-sm text-gray-400 mb-4">
+              <div>Rank</div>
+              <div className="col-span-2">Meme</div>
+              <div>Votes</div>
+              <div>Creator</div>
+              <div>Voting Incentives</div>
+            </div>
+            {[...Array(5)].map((_, index) => (
+              <div key={index} className="grid grid-cols-6 gap-4 py-4 border-t border-gray-800">
+                <div className="text-gray-500">#{index + 1}</div>
+                <div className="col-span-2 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded bg-gradient-to-br from-purple-400/20 to-blue-400/20"></div>
+                  <span className="text-gray-300">Meme Title</span>
+                </div>
+                <div className="text-gray-300">1.2K</div>
+                <div className="text-gray-300">@creator</div>
+                <div className="text-yellow-400">0.5 ETH</div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default Home;
