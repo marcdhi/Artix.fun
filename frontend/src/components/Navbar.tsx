@@ -34,7 +34,6 @@ const Navbar = () => {
 
   useEffect(() => {
     if (user) {
-      // Set user display name based on available data
       if (user.google) {
         setUserDisplayName(user.google.email.split('@')[0]);
       } else if (user.email) {
@@ -45,9 +44,7 @@ const Navbar = () => {
         setUserDisplayName(user.id.slice(0, 6));
       }
 
-      // Set wallet balance if available
       if (user.wallet?.address) {
-        // Here you would fetch actual balance
         setBalance('0.01');
       }
     }
@@ -66,7 +63,6 @@ const Navbar = () => {
 
           {/* Navigation Links */}
           <div className="flex items-center gap-4">
-            {/* Create Button */}
             <Link
               to="/create"
               className="flex items-center gap-1 bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-1.5 rounded-full text-sm font-medium"
@@ -74,7 +70,6 @@ const Navbar = () => {
               <span>+ create</span>
             </Link>
 
-            {/* Leaderboard Link */}
             <Link
               to="/leaderboard"
               className="text-white hover:text-yellow-400 text-sm font-medium"
@@ -82,14 +77,37 @@ const Navbar = () => {
               leaderboard
             </Link>
 
-            {/* Wallet Display/Connect Button */}
-            <div className="flex items-center gap-3">
+            {/* Right - Auth & Profile */}
+            <div className="flex items-center gap-4">
               {authenticated ? (
-                <>
+                <div className="flex items-center gap-3">
+                  {/* Combined Wallet & Profile Button */}
+                  <Link
+                    to="/my-page"
+                    className="flex items-center gap-3 px-4 py-2 bg-gray-900 hover:bg-gray-800 transition-all duration-200 rounded-4xl"
+                  >
+                    {/* {balance && (
+                      <span className="text-sm font-medium text-white">{balance} ET</span>
+                    )} */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-white">{userDisplayName}</span>
+                      <div className="w-6 h-6 rounded-sm bg-blue-500 flex items-center justify-center overflow-hidden">
+                        <img
+                          src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id || 'default'}`}
+                          alt="User Avatar"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </div>
+                  </Link>
+
+                  {/* Wallet Display */}
                   <div className="flex items-center gap-2 bg-[#1A1A1A] rounded-full px-3 py-1.5">
                     <span className="text-yellow-400 text-sm font-medium">0.01 ET</span>
                     <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
                   </div>
+
+                  {/* Logout Button */}
                   <button 
                     onClick={() => logout()}
                     className="text-white hover:text-yellow-400"
@@ -100,7 +118,7 @@ const Navbar = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
                   </button>
-                </>
+                </div>
               ) : (
                 <button
                   onClick={() => login()}
