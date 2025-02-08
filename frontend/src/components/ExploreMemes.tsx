@@ -3,10 +3,13 @@ import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { ethers } from 'ethers';
 import ArtixMemeContestABI from '../abi/ArtixMemeContest.json';
 import ArtifactNFTABI from '../abi/ArtifactNFT.json';
+import ArtifactRankingABI from '../abi/ArtifactRanking.json';
 import { uploadToPinata } from '../utils/pinata';
+import AIMarketing from './AIMarketing';
 
 const ARTIX_CONTRACT_ADDRESS = import.meta.env.VITE_ARTIX_CONTRACT_ADDRESS;
 const ARTIX_NFT_CONTRACT_ADDRESS = import.meta.env.VITE_ARTIX_NFT_CONTRACT_ADDRESS;
+const ARTIX_RANKING_CONTRACT_ADDRESS = import.meta.env.VITE_ARTIX_RANKING_CONTRACT_ADDRESS;
 
 // Base Sepolia network parameters
 const BASE_SEPOLIA_PARAMS = {
@@ -44,13 +47,43 @@ interface VotingConfig {
 }
 
 function ExploreMemes() {
-  const { authenticated, login } = usePrivy();
+  const { authenticated, login, user } = usePrivy();
   const { wallets } = useWallets();
   const [memes, setMemes] = useState<Meme[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [votingConfig, setVotingConfig] = useState<VotingConfig | null>(null);
   const [votingStatus, setVotingStatus] = useState<{ [key: number]: 'loading' | 'success' | 'error' | null }>({});
+
+  // Get the authenticated wallet address
+  const getAuthenticatedWallet = () => {
+    if (!authenticated || !user?.wallet?.address) return null;
+
+    // First check if we have the user's authenticated wallet address
+    const authWalletAddress = user.wallet.address;
+    console.log('Auth wallet address:', authWalletAddress);
+
+    // Find the matching wallet from wallets list
+    const matchingWallet = wallets?.find(w => 
+      w.address.toLowerCase() === authWalletAddress.toLowerCase()
+    );
+
+    if (matchingWallet) {
+      console.log('Found matching wallet:', {
+        type: matchingWallet.walletClientType,
+        address: matchingWallet.address
+      });
+      return matchingWallet;
+    }
+
+    // If no matching wallet found but we have the auth address, create a minimal wallet object
+    return {
+      address: authWalletAddress,
+      walletClientType: 'privy'
+    };
+  };
+
+  const activeWallet = getAuthenticatedWallet();
 
   const switchToBaseSepolia = async (provider: any) => {
     try {
@@ -92,8 +125,6 @@ function ExploreMemes() {
   };
 
   const checkUserVotes = async (contract: ethers.Contract, memesList: Meme[], userAddress: string) => {
-
-
     console.log('Checking user votes for:', userAddress);
     
     try {
@@ -180,9 +211,9 @@ function ExploreMemes() {
       }
 
       // Check user's voted status if authenticated
-      if (authenticated && wallets?.[0]?.address) {
-        console.log('Checking vote status for user:', wallets[0].address);
-        const memesWithVoteStatus = await checkUserVotes(contract, memesList, wallets[0].address);
+      if (authenticated && activeWallet?.address) {
+        console.log('Checking vote status for user:', activeWallet.address);
+        const memesWithVoteStatus = await checkUserVotes(contract, memesList, activeWallet.address);
         console.log('Memes with vote status:', memesWithVoteStatus);
         setMemes(memesWithVoteStatus);
       } else {
@@ -225,7 +256,7 @@ function ExploreMemes() {
   };
 
   const mintNFTForMeme = async (meme: Meme) => {
-    if (!authenticated || !wallets?.[0]) {
+    if (!authenticated || !activeWallet?.address) {
       console.log('User not authenticated, prompting login');
       login();
       return;
@@ -234,7 +265,7 @@ function ExploreMemes() {
     try {
       console.log('Starting NFT minting process for meme:', meme);
       
-      const wallet = wallets[0];
+      const wallet = activeWallet;
       const provider = await wallet.getEthereumProvider();
       
       if (!provider) {
@@ -346,7 +377,7 @@ function ExploreMemes() {
   };
 
   const voteMeme = async (memeId: number) => {
-    if (!authenticated || !wallets?.[0]) {
+    if (!authenticated || !activeWallet?.address) {
       login();
       return;
     }
@@ -354,7 +385,7 @@ function ExploreMemes() {
     try {
       setVotingStatus(prev => ({ ...prev, [memeId]: 'loading' }));
 
-      const wallet = wallets[0];
+      const wallet = activeWallet;
       const provider = await wallet.getEthereumProvider();
       
       if (!provider) {
@@ -366,21 +397,28 @@ function ExploreMemes() {
       const ethersProvider = new ethers.providers.Web3Provider(provider);
       const signer = ethersProvider.getSigner();
       
-      const contract = new ethers.Contract(
+      // Vote on meme
+      const memeContract = new ethers.Contract(
         ARTIX_CONTRACT_ADDRESS,
         ArtixMemeContestABI,
         signer
       );
 
-      // Get vote cost from config if not already fetched
-      if (!votingConfig) {
-        await fetchVotingConfig(contract);
-      }
-      
       const voteCost = votingConfig?.voteCost || ethers.utils.parseEther("0.01");
+      const voteTx = await memeContract.voteMeme(memeId, { value: voteCost });
+      await voteTx.wait();
 
-      const tx = await contract.voteMeme(memeId, { value: voteCost });
-      await tx.wait();
+      // Update user's ranking
+      console.log('Updating user ranking after vote...');
+      const rankingContract = new ethers.Contract(
+        ARTIX_RANKING_CONTRACT_ADDRESS,
+        ArtifactRankingABI,
+        signer
+      );
+
+      const rankingTx = await rankingContract.updateRanking(activeWallet.address, 1, false);
+      await rankingTx.wait();
+      console.log('Ranking updated successfully');
 
       // Refresh memes after successful vote
       await fetchMemes();
@@ -399,8 +437,17 @@ function ExploreMemes() {
   };
 
   useEffect(() => {
+    console.log('ExploreMemes useEffect triggered', {
+      authenticated,
+      userWallet: user?.wallet?.address,
+      activeWallet: activeWallet?.address,
+      allWallets: wallets?.map(w => ({
+        type: w.walletClientType,
+        address: w.address
+      }))
+    });
     fetchMemes();
-  }, [authenticated, wallets?.[0]?.address]);
+  }, [authenticated, user?.wallet?.address, activeWallet?.address]);
 
   const formatAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -516,6 +563,13 @@ function ExploreMemes() {
                       >
                         {getVoteButtonText(meme, votingStatus[meme.id])}
                       </button>
+                      
+                      {/* Add AI Marketing Section */}
+                      {meme.voteCount >= (votingConfig?.minVotesForWin || 0) && (
+                        <div className="mt-4">
+                          <AIMarketing meme={meme} />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
