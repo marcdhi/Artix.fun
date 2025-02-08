@@ -96,30 +96,6 @@ function UserRanking() {
 
   const activeWallet = getAuthenticatedWallet();
 
-  const switchToBaseSepolia = async (provider: EthereumProvider) => {
-    try {
-      await provider.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: BASE_SEPOLIA_PARAMS.chainId }],
-      });
-    } catch (switchError: unknown) {
-      if (switchError && typeof switchError === 'object' && 'code' in switchError && switchError.code === 4902) {
-        try {
-          await provider.request({
-            method: 'wallet_addEthereumChain',
-            params: [BASE_SEPOLIA_PARAMS],
-          });
-        } catch (addError) {
-          console.error('Error adding Base Sepolia network:', addError);
-          throw new Error('Could not add Base Sepolia network to your wallet');
-        }
-      } else {
-        console.error('Error switching to Base Sepolia:', switchError);
-        throw new Error('Could not switch to Base Sepolia network');
-      }
-    }
-  };
-
   const fetchUserStats = async (address: string) => {
     const provider = new ethers.providers.JsonRpcProvider(BASE_SEPOLIA_PARAMS.rpcUrls[0]);
     

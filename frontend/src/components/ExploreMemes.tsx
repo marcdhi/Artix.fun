@@ -46,6 +46,22 @@ interface VotingConfig {
   voteCost: ethers.BigNumber;
 }
 
+interface ConnectedWallet {
+  address: string;
+  walletClientType: string;
+  getEthereumProvider: () => Promise<any>;
+}
+
+interface Event {
+  event: string;
+  args: {
+    tokenId: { toString: () => string };
+    creator: string;
+    tokenURI: string;
+    network: number;
+  };
+}
+
 function ExploreMemes() {
   const { authenticated, login, user } = usePrivy();
   const { wallets } = useWallets();
@@ -73,14 +89,11 @@ function ExploreMemes() {
         type: matchingWallet.walletClientType,
         address: matchingWallet.address
       });
-      return matchingWallet;
+      return matchingWallet as ConnectedWallet;
     }
 
-    // If no matching wallet found but we have the auth address, create a minimal wallet object
-    return {
-      address: authWalletAddress,
-      walletClientType: 'privy'
-    };
+    // If no matching wallet found but we have the auth address, return null instead of minimal wallet object
+    return null;
   };
 
   const activeWallet = getAuthenticatedWallet();
@@ -265,13 +278,12 @@ function ExploreMemes() {
     try {
       console.log('Starting NFT minting process for meme:', meme);
       
-      const wallet = activeWallet;
+      const wallet = activeWallet as ConnectedWallet;
+      if (!wallet.getEthereumProvider) {
+        throw new Error('Wallet does not support Ethereum provider');
+      }
       const provider = await wallet.getEthereumProvider();
       
-      if (!provider) {
-        throw new Error('No provider available');
-      }
-
       console.log('Switching to Base Sepolia network...');
       await switchToBaseSepolia(provider);
 
@@ -344,7 +356,7 @@ function ExploreMemes() {
       console.log('NFT minting transaction confirmed:', mintReceipt);
       
       // Check for NFTMinted event
-      const mintEvent = mintReceipt.events?.find(e => e.event === 'NFTMinted');
+      const mintEvent = mintReceipt.events?.find((e: Event) => e.event === 'NFTMinted');
       if (mintEvent) {
         console.log('NFTMinted event found:', {
           tokenId: mintEvent.args.tokenId.toString(),
@@ -385,13 +397,12 @@ function ExploreMemes() {
     try {
       setVotingStatus(prev => ({ ...prev, [memeId]: 'loading' }));
 
-      const wallet = activeWallet;
+      const wallet = activeWallet as ConnectedWallet;
+      if (!wallet.getEthereumProvider) {
+        throw new Error('Wallet does not support Ethereum provider');
+      }
       const provider = await wallet.getEthereumProvider();
       
-      if (!provider) {
-        throw new Error('No provider available');
-      }
-
       await switchToBaseSepolia(provider);
 
       const ethersProvider = new ethers.providers.Web3Provider(provider);

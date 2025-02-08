@@ -13,8 +13,6 @@ interface MemeItem {
 
 function MyPage() {
   const { user } = usePrivy();
-  const [toggle1, setToggle1] = useState(true);
-  const [toggle2, setToggle2] = useState(true);
   const [twitterConnected, setTwitterConnected] = useState(false);
   const [instagramConnected, setInstagramConnected] = useState(false);
 

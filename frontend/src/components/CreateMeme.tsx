@@ -25,7 +25,7 @@ const BASE_SEPOLIA_PARAMS = {
 };
 
 function CreateMeme() {
-  const { login, ready, authenticated } = usePrivy();
+  const { login, authenticated } = usePrivy();
   const { wallets } = useWallets();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -98,34 +98,6 @@ function CreateMeme() {
         status: error.response?.status
       });
       throw new Error(`Failed to upload image to IPFS: ${error.response?.data?.message || error.message}`);
-    }
-  };
-
-  const testPinataConnection = async () => {
-    try {
-      console.log('Testing Pinata connection with credentials:', {
-        hasApiKey: !!PINATA_API_KEY,
-        apiKeyLength: PINATA_API_KEY?.length,
-        hasSecretKey: !!PINATA_SECRET_KEY,
-        secretKeyLength: PINATA_SECRET_KEY?.length
-      });
-
-      const res = await axios.get("https://api.pinata.cloud/data/testAuthentication", {
-        headers: {
-          'pinata_api_key': PINATA_API_KEY,
-          'pinata_secret_api_key': PINATA_SECRET_KEY
-        }
-      });
-
-      console.log('Pinata Connection Test Response:', res.data);
-      alert('Pinata Connection Test Successful! Check console for details.');
-    } catch (error: any) {
-      console.error('Pinata Connection Test Failed:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
-      alert(`Pinata Connection Test Failed: ${error.response?.data?.message || error.message}`);
     }
   };
 
