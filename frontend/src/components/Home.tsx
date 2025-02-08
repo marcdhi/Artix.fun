@@ -133,7 +133,7 @@ const Home = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-black text-white rounded-t-4xl bg-gradient-to-b from-[#020B44] via-black to-black">
+    <div className="relative min-h-screen bg-black text-white rounded-t-[120px] bg-gradient-to-b from-[#020B44] via-black to-black">
       <div className="max-w-7xl mx-auto px-4 ">
         {/* Hero Section */}
         <div className="pt-8 pb-8">
