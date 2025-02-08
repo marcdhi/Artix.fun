@@ -54,9 +54,9 @@ interface UserStats {
   winningMemes: number;
 }
 
-interface EthereumProvider {
-  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
-}
+// interface EthereumProvider {
+//   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+// }
 
 function UserRanking() {
   const { authenticated, login, user } = usePrivy();
@@ -128,6 +128,7 @@ function UserRanking() {
           }
           memeId++;
         } catch (e) {
+          console.error('Error fetching user stats:', e);
           break;
         }
       }
@@ -145,6 +146,7 @@ function UserRanking() {
             votedMemes.push(i);
           }
         } catch (e) {
+          console.error('Error fetching user stats:', e);
           break;
         }
       }
@@ -183,88 +185,7 @@ function UserRanking() {
     }
   };
 
-  const fetchUserRanking = async () => {
-    if (!authenticated || !activeWallet?.address) {
-      console.log('User not authenticated or no active wallet', {
-        authenticated,
-        userWallet: user?.wallet?.address,
-        activeWallet: activeWallet?.address
-      });
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      const provider = new ethers.providers.JsonRpcProvider(BASE_SEPOLIA_PARAMS.rpcUrls[0]);
-      console.log('Provider connected:', await provider.getNetwork());
-
-      const rankingContract = new ethers.Contract(
-        ARTIX_RANKING_CONTRACT_ADDRESS,
-        ArtifactRankingABI,
-        provider
-      );
-
-      console.log('Ranking contract address:', ARTIX_RANKING_CONTRACT_ADDRESS);
-      console.log('Using authenticated wallet address:', activeWallet.address);
-      
-      // Verify contract exists
-      const code = await provider.getCode(ARTIX_RANKING_CONTRACT_ADDRESS);
-      console.log('Contract exists:', code !== '0x');
-
-      if (code === '0x') {
-        throw new Error('Ranking contract not found at the specified address');
-      }
-
-      // Get user's ranking data
-      const data = await rankingContract.userRankings(activeWallet.address);
-      console.log('Raw ranking data:', data);
-      
-      if (!data) {
-        console.log('No ranking data found, initializing with defaults');
-        setRankingData({
-          totalVotes: 0,
-          totalMemeSubmissions: 0,
-          currentRank: 0,
-          points: 0
-        });
-      } else {
-        const rankingData: UserRankingData = {
-          totalVotes: data.totalVotes.toNumber(),
-          totalMemeSubmissions: data.totalMemeSubmissions.toNumber(),
-          currentRank: data.currentRank,
-          points: data.points.toNumber()
-        };
-
-        console.log('Processed ranking data:', rankingData);
-        setRankingData(rankingData);
-      }
-
-      // Fetch additional user stats
-      try {
-        await fetchUserStats(activeWallet.address);
-      } catch (statsError) {
-        console.error('Error fetching user stats:', statsError);
-        setError('Partial data loaded - some stats may be missing');
-      }
-
-    } catch (err) {
-      console.error('Error fetching user ranking:', err);
-      setError('Failed to fetch ranking data: ' + (err as Error).message);
-      // Initialize with default data even on error
-      setRankingData({
-        totalVotes: 0,
-        totalMemeSubmissions: 0,
-        currentRank: 0,
-        points: 0
-      });
-    } finally {
-      console.log('Fetch completed, setting loading to false');
-      setLoading(false);
-    }
-  };
+  
 
   useEffect(() => {
     console.log('UserRanking useEffect triggered', {
@@ -276,8 +197,93 @@ function UserRanking() {
         address: w.address
       }))
     });
+    
+
+    const fetchUserRanking = async () => {
+      if (!authenticated || !activeWallet?.address) {
+        console.log('User not authenticated or no active wallet', {
+          authenticated,
+          userWallet: user?.wallet?.address,
+          activeWallet: activeWallet?.address
+        });
+        setLoading(false);
+        return;
+      }
+  
+      try {
+        setLoading(true);
+        setError(null);
+  
+        const provider = new ethers.providers.JsonRpcProvider(BASE_SEPOLIA_PARAMS.rpcUrls[0]);
+        console.log('Provider connected:', await provider.getNetwork());
+  
+        const rankingContract = new ethers.Contract(
+          ARTIX_RANKING_CONTRACT_ADDRESS,
+          ArtifactRankingABI,
+          provider
+        );
+  
+        console.log('Ranking contract address:', ARTIX_RANKING_CONTRACT_ADDRESS);
+        console.log('Using authenticated wallet address:', activeWallet.address);
+        
+        // Verify contract exists
+        const code = await provider.getCode(ARTIX_RANKING_CONTRACT_ADDRESS);
+        console.log('Contract exists:', code !== '0x');
+  
+        if (code === '0x') {
+          throw new Error('Ranking contract not found at the specified address');
+        }
+  
+        // Get user's ranking data
+        const data = await rankingContract.userRankings(activeWallet.address);
+        console.log('Raw ranking data:', data);
+        
+        if (!data) {
+          console.log('No ranking data found, initializing with defaults');
+          setRankingData({
+            totalVotes: 0,
+            totalMemeSubmissions: 0,
+            currentRank: 0,
+            points: 0
+          });
+        } else {
+          const rankingData: UserRankingData = {
+            totalVotes: data.totalVotes.toNumber(),
+            totalMemeSubmissions: data.totalMemeSubmissions.toNumber(),
+            currentRank: data.currentRank,
+            points: data.points.toNumber()
+          };
+  
+          console.log('Processed ranking data:', rankingData);
+          setRankingData(rankingData);
+        }
+  
+        // Fetch additional user stats
+        try {
+          await fetchUserStats(activeWallet.address);
+        } catch (statsError) {
+          console.error('Error fetching user stats:', statsError);
+          setError('Partial data loaded - some stats may be missing');
+        }
+  
+      } catch (err) {
+        console.error('Error fetching user ranking:', err);
+        setError('Failed to fetch ranking data: ' + (err as Error).message);
+        // Initialize with default data even on error
+        setRankingData({
+          totalVotes: 0,
+          totalMemeSubmissions: 0,
+          currentRank: 0,
+          points: 0
+        });
+      } finally {
+        console.log('Fetch completed, setting loading to false');
+        setLoading(false);
+      }
+    };
+
     fetchUserRanking();
-  }, [authenticated, user?.wallet?.address, activeWallet?.address]);
+  }, [authenticated, user?.wallet?.address, activeWallet?.address, wallets]);
 
   // Add loading state logging
   useEffect(() => {
