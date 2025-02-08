@@ -11,7 +11,7 @@ const Logo = () => (
 );
 
 const Navbar = () => {
-  const { login, ready, authenticated, user, logout } = usePrivy();
+  const { login, authenticated, user, logout } = usePrivy();
   const [scrolled, setScrolled] = useState(false);
   const [userDisplayName, setUserDisplayName] = useState<string>('');
   const [balance, setBalance] = useState<string>('0.00');

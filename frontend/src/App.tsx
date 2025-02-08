@@ -21,7 +21,7 @@ function App() {
       <div className="min-h-screen bg-black">
         <Navbar />
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Home/>} />
           <Route path="/create" element={<CreateMeme />} />
           <Route path="/my-page" element={<MyPage />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
