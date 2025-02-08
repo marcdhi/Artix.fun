@@ -3,11 +3,13 @@ import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { ethers } from 'ethers';
 import axios from 'axios';
 import ArtixMemeContestABI from '../abi/ArtixMemeContest.json';
+import ArtifactRankingABI from '../abi/ArtifactRanking.json';
 
 const ARTIX_CONTRACT_ADDRESS = import.meta.env.VITE_ARTIX_CONTRACT_ADDRESS;
 const PINATA_API_KEY = import.meta.env.VITE_PINATA_API_KEY;
 const PINATA_SECRET_KEY = import.meta.env.VITE_PINATA_SECRET_KEY;
 const VENICE_API_KEY = import.meta.env.VITE_VENICE_API_KEY;
+const ARTIX_RANKING_CONTRACT_ADDRESS = import.meta.env.VITE_ARTIX_RANKING_CONTRACT_ADDRESS;
 
 // Base Sepolia network parameters
 const BASE_SEPOLIA_PARAMS = {
@@ -23,7 +25,7 @@ const BASE_SEPOLIA_PARAMS = {
 };
 
 function CreateMeme() {
-  const { login, ready, authenticated } = usePrivy();
+  const { login, authenticated } = usePrivy();
   const { wallets } = useWallets();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -99,34 +101,6 @@ function CreateMeme() {
     }
   };
 
-  const testPinataConnection = async () => {
-    try {
-      console.log('Testing Pinata connection with credentials:', {
-        hasApiKey: !!PINATA_API_KEY,
-        apiKeyLength: PINATA_API_KEY?.length,
-        hasSecretKey: !!PINATA_SECRET_KEY,
-        secretKeyLength: PINATA_SECRET_KEY?.length
-      });
-
-      const res = await axios.get("https://api.pinata.cloud/data/testAuthentication", {
-        headers: {
-          'pinata_api_key': PINATA_API_KEY,
-          'pinata_secret_api_key': PINATA_SECRET_KEY
-        }
-      });
-
-      console.log('Pinata Connection Test Response:', res.data);
-      alert('Pinata Connection Test Successful! Check console for details.');
-    } catch (error: any) {
-      console.error('Pinata Connection Test Failed:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
-      alert(`Pinata Connection Test Failed: ${error.response?.data?.message || error.message}`);
-    }
-  };
-
   const switchToBaseSepolia = async (provider: any) => {
     try {
       // Try switching to Base Sepolia
@@ -161,140 +135,58 @@ function CreateMeme() {
 
     try {
       setIsUploading(true);
-
-      // Log contract address
-      console.log('Contract address from env:', ARTIX_CONTRACT_ADDRESS);
       
-      // 1. Upload image to IPFS via Pinata
+      // Upload to IPFS
       const ipfsHash = await uploadToPinata(imageFile);
       console.log('IPFS Upload successful:', ipfsHash);
 
-      // 2. Get wallet and provider
       const wallet = wallets[0];
-      
-      // Request wallet connection if not already connected
-      if (!wallet.address) {
-        await login(); // Use Privy login instead of direct wallet connect
-        return; // Exit and let user try again after connecting
-      }
-
-      // Get the provider
       const provider = await wallet.getEthereumProvider();
       
       if (!provider) {
         throw new Error('No provider available');
       }
 
-      // Switch to Base Sepolia network first
       await switchToBaseSepolia(provider);
 
-      // 3. Create ethers provider and signer
       const ethersProvider = new ethers.providers.Web3Provider(provider);
-      await ethersProvider.send("eth_requestAccounts", []); // Explicitly request accounts
+      await ethersProvider.send("eth_requestAccounts", []);
       const signer = ethersProvider.getSigner();
-      const signerAddress = await signer.getAddress();
-      console.log('Signer address:', signerAddress);
 
-      // Get the current network
-      const network = await ethersProvider.getNetwork();
-      console.log('Current network:', network);
-
-      // Verify we're on Base Sepolia
-      if (network.chainId !== 84532) {
-        throw new Error('Please make sure you are connected to Base Sepolia network');
-      }
-
-      // Log contract verification attempt
-      console.log('Attempting to verify contract at address:', ARTIX_CONTRACT_ADDRESS);
-      
-      // Verify contract code exists
-      const code = await ethersProvider.getCode(ARTIX_CONTRACT_ADDRESS);
-      console.log('Contract bytecode:', code);
-      console.log('Contract exists:', code !== '0x');
-      
-      if (code === '0x') {
-        console.error('Contract not found. Please verify:');
-        console.error('1. Contract address is correct');
-        console.error('2. Contract is deployed to Base Sepolia');
-        console.error('3. You are connected to Base Sepolia network');
-        throw new Error('Contract not found at the specified address. Please check console for details.');
-      }
-
-      // 4. Create contract instance
-      console.log('Creating contract instance with ABI:', ArtixMemeContestABI);
-      const contract = new ethers.Contract(
+      // Submit meme
+      console.log('Submitting meme to contract...');
+      const memeContract = new ethers.Contract(
         ARTIX_CONTRACT_ADDRESS,
         ArtixMemeContestABI,
         signer
       );
 
-      // Log the voting configuration to check contract state
-      try {
-        const votingConfig = await contract.votingConfiguration();
-        console.log('Current voting configuration:', votingConfig);
-      } catch (error) {
-        console.warn('Could not fetch voting configuration:', error);
-      }
-
-      console.log('Submitting meme to contract with data:', {
-        ipfsHash,
-        title: formData.title,
-        description: formData.description,
-        socialLinks: formData.socialLinks,
-        networkId: formData.networkId,
-        contractAddress: ARTIX_CONTRACT_ADDRESS,
-        signerAddress
-      });
-
-      // Try to estimate gas first to check if the transaction will fail
-      try {
-        const gasEstimate = await contract.estimateGas.submitMeme(
-          ipfsHash,
-          formData.title,
-          formData.description,
-          formData.socialLinks,
-          BigInt(formData.networkId)
-        );
-        console.log('Estimated gas:', gasEstimate.toString());
-      } catch (error) {
-        console.error('Gas estimation failed:', error);
-        // Try to get more details about the revert
-        try {
-          await ethersProvider.call({
-            to: ARTIX_CONTRACT_ADDRESS,
-            data: contract.interface.encodeFunctionData('submitMeme', [
-              ipfsHash,
-              formData.title,
-              formData.description,
-              formData.socialLinks,
-              BigInt(formData.networkId)
-            ])
-          });
-        } catch (callError: any) {
-          console.error('Detailed call error:', callError);
-          throw new Error(`Transaction will fail: ${callError.message}`);
-        }
-      }
-
-      // 5. Submit meme to contract
-      const tx = await contract.submitMeme(
+      const memeTx = await memeContract.submitMeme(
         ipfsHash,
         formData.title,
         formData.description,
         formData.socialLinks,
         BigInt(formData.networkId),
-        { 
-          gasLimit: 500000
-        }
+        { gasLimit: 500000 }
       );
 
-      console.log('Transaction sent:', tx.hash);
-      
-      // 6. Wait for transaction confirmation
-      const receipt = await tx.wait();
-      console.log('Transaction confirmed:', receipt);
-      
-      // Reset form and show success
+      console.log('Meme submission transaction sent:', memeTx.hash);
+      const memeReceipt = await memeTx.wait();
+      console.log('Meme submission confirmed:', memeReceipt);
+
+      // Update user's ranking for meme submission
+      console.log('Updating user ranking for meme submission...');
+      const rankingContract = new ethers.Contract(
+        ARTIX_RANKING_CONTRACT_ADDRESS,
+        ArtifactRankingABI,
+        signer
+      );
+
+      const rankingTx = await rankingContract.updateRanking(wallets[0].address, 0, true);
+      await rankingTx.wait();
+      console.log('Ranking updated successfully');
+
+      // Reset form
       setImageFile(null);
       setImagePreview(null);
       setFormData({
@@ -304,29 +196,10 @@ function CreateMeme() {
         networkId: '84532'
       });
       
-      alert('Meme submitted successfully! Transaction hash: ' + tx.hash);
+      alert('Meme submitted successfully! Transaction hash: ' + memeTx.hash);
     } catch (error: any) {
-      console.error('Detailed error:', {
-        message: error.message,
-        code: error.code,
-        data: error.data,
-        transaction: error.transaction,
-      });
-      
-      let errorMessage = 'Error submitting meme: ';
-      if (error.code === 'UNPREDICTABLE_GAS_LIMIT') {
-        errorMessage += 'Transaction might fail. Please check your inputs and try again.';
-      } else if (error.code === 'INSUFFICIENT_FUNDS') {
-        errorMessage += 'Insufficient funds for transaction. You need Base Sepolia ETH.';
-      } else if (error.message.includes('user rejected')) {
-        errorMessage += 'Transaction was rejected.';
-      } else if (error.message.includes('network')) {
-        errorMessage += 'Please make sure you are connected to Base Sepolia network.';
-      } else {
-        errorMessage += error.message || 'Unknown error';
-      }
-      
-      alert(errorMessage);
+      console.error('Detailed error:', error);
+      alert('Error submitting meme: ' + (error.message || 'Unknown error'));
     } finally {
       setIsUploading(false);
     }

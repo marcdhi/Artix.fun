@@ -6,6 +6,7 @@ import CreateMeme from "./components/CreateMeme";
 import Leaderboard from "./components/Leaderboard";
 import MyPage from "./components/MyPage";
 import ExploreMemes from "./components/ExploreMemes";
+import UserRanking from "./components/UserRanking";
 import "./App.css";
 
 function App() {
@@ -19,15 +20,14 @@ function App() {
     <Router>
       <div className="min-h-screen bg-black">
         <Navbar />
-        <div className="pt-16">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/create" element={<CreateMeme />} />
-            <Route path="/leaderboard" element={<Leaderboard />} />
-            <Route path="/my-page" element={<MyPage />} />
-            <Route path="/explore" element={<ExploreMemes />} />
-          </Routes>
-        </div>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/create" element={<CreateMeme />} />
+          <Route path="/my-page" element={<MyPage />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/explore" element={<ExploreMemes />} />
+          <Route path="/user-ranking" element={<UserRanking />} />
+        </Routes>
       </div>
     </Router>
   );
