@@ -1,16 +1,437 @@
 const express = require('express');
 const { Scraper } = require('agent-twitter-client');
 const Anthropic = require('@anthropic-ai/sdk');
+const { ethers } = require('ethers');
+const cors = require('cors');
+const dotenv = require('dotenv');
+
+dotenv.config();
+
+const ArtixNFTABI =  [
+  {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "approved",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "Approval",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "approved",
+        "type": "bool"
+      }
+    ],
+    "name": "ApprovalForAll",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "tokenURI",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum ArtifactNFT.Network",
+        "name": "network",
+        "type": "uint8"
+      }
+    ],
+    "name": "NFTMinted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "Transfer",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "approve",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "balanceOf",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getApproved",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      }
+    ],
+    "name": "isApprovedForAll",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "tokenURI",
+        "type": "string"
+      },
+      {
+        "internalType": "enum ArtifactNFT.Network",
+        "name": "network",
+        "type": "uint8"
+      }
+    ],
+    "name": "mintMemeNFT",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "name",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "ownerOf",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "safeTransferFrom",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "_data",
+        "type": "bytes"
+      }
+    ],
+    "name": "safeTransferFrom",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "operator",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "approved",
+        "type": "bool"
+      }
+    ],
+    "name": "setApprovalForAll",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes4",
+        "name": "interfaceId",
+        "type": "bytes4"
+      }
+    ],
+    "name": "supportsInterface",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "symbol",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "tokenURI",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      }
+    ],
+    "name": "transferFrom",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
+
+const {
+  AgentKit,
+  CdpWalletProvider,
+  walletActionProvider,
+  cdpApiActionProvider,
+  cdpWalletActionProvider
+} = require("@coinbase/agentkit");
 require('dotenv').config();
 
 const app = express();
 app.use(express.json());
+app.use(cors());
+
 
 // Initialize Twitter scraper and Claude
 let scraper = null;
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
+
+// Initialize CDP AgentKit and wallet
+let agentKit = null;
+let cdpWallet = null;
+
+// Add these constants at the top with other configs
+const ARTIX_NFT_ADDRESS = process.env.ARTIX_NFT_ADDRESS;
+const PROVIDER_URL = process.env.PROVIDER_URL || 'https://sepolia.base.org';
 
 // Initialize scraper and login with both basic and V2 functionality
 async function initializeScraper() {
@@ -35,6 +456,62 @@ async function initializeScraper() {
     console.error('Failed to initialize Twitter scraper:', error);
     return false;
   }
+}
+
+// Initialize CDP Agent
+async function initializeCDPAgent() {
+  try {
+    // Configure CDP Wallet Provider
+    const config = {
+      apiKeyName: process.env.CDP_API_KEY_NAME,
+      apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      networkId: process.env.NETWORK_ID || "base-sepolia",
+    };
+
+    // Initialize wallet provider
+    const walletProvider = await CdpWalletProvider.configureWithWallet(config);
+    
+    // Initialize AgentKit with necessary action providers
+    agentKit = await AgentKit.from({
+      walletProvider,
+      actionProviders: [
+        walletActionProvider(),
+        cdpApiActionProvider({
+          apiKeyName: process.env.CDP_API_KEY_NAME,
+          apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+        }),
+        cdpWalletActionProvider({
+          apiKeyName: process.env.CDP_API_KEY_NAME,
+          apiKeyPrivateKey: process.env.CDP_API_KEY_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+        }),
+      ],
+    });
+
+    // Get and log available actions for debugging
+    const actions = agentKit.getActions();
+    console.log('Available CDP Agent actions:', actions.map(a => ({
+      name: a.name,
+      description: a.description,
+      schema: a.schema.description
+    })));
+
+    cdpWallet = walletProvider;
+    console.log('CDP Agent initialized successfully');
+    return true;
+  } catch (error) {
+    console.error('Failed to initialize CDP Agent:', error);
+    return false;
+  }
+}
+
+// Helper function to shorten address
+function shortenAddress(address) {
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+// Helper function to get OpenSea URL
+function getOpenSeaUrl(contractAddress, tokenId) {
+  return `https://testnets.opensea.io/assets/base_sepolia/${contractAddress}/${tokenId}`;
 }
 
 // Generate tweet content using Claude
@@ -292,6 +769,162 @@ app.get('/api/analyze-meme/:tweetId', async (req, res) => {
   }
 });
 
+// Endpoint for CDP Agent to check and mint NFTs
+app.post('/api/cdp/check-and-mint', async (req, res) => {
+  try {
+    const { memeId, voteCount, memeMetadata } = req.body;
+
+    // Initialize CDP Agent if not already initialized
+    if (!agentKit || !cdpWallet) {
+      const initialized = await initializeCDPAgent();
+      if (!initialized) {
+        return res.status(500).json({ error: 'Failed to initialize CDP Agent' });
+      }
+    }
+
+    // Check vote threshold
+    const VOTE_THRESHOLD = 2;
+    if (voteCount < VOTE_THRESHOLD) {
+      return res.status(400).json({
+        success: false,
+        message: `Meme needs at least ${VOTE_THRESHOLD} votes to mint NFT`
+      });
+    }
+
+    // Get available actions
+    const actions = agentKit.getActions();
+    console.log('Available actions:', actions.map(a => a.name));
+    
+    // Get wallet details
+    const walletDetailsAction = actions.find(a => a.name === 'WalletActionProvider_get_wallet_details');
+    if (!walletDetailsAction) {
+      throw new Error('Wallet details action not available');
+    }
+    
+    const walletDetails = await walletDetailsAction.invoke({});
+    console.log('CDP Agent wallet details:', walletDetails);
+
+    // Request faucet funds if needed
+    if (process.env.NETWORK_ID === 'base-sepolia') {
+      const faucetAction = actions.find(a => a.name === 'CdpApiActionProvider_request_faucet_funds');
+      if (faucetAction) {
+        try {
+          await faucetAction.invoke({ assetId: 'eth' });
+          console.log('Requested faucet funds successfully');
+        } catch (error) {
+          console.warn('Failed to request faucet funds:', error);
+        }
+      }
+    }
+
+    // Use deploy contract action for interaction
+    const deployContractAction = actions.find(a => a.name === 'CdpWalletActionProvider_deploy_contract');
+    if (!deployContractAction) {
+      throw new Error('Deploy contract action not available');
+    }
+
+    // Prepare the Solidity input JSON
+    const solidityInput = {
+      language: "Solidity",
+      settings: {
+        remappings: [],
+        outputSelection: {
+          "*": {
+            "*": ["abi", "evm.bytecode"]
+          }
+        }
+      },
+      sources: {
+        "ArtixNFT.sol": {
+          content: `
+            // SPDX-License-Identifier: MIT
+            pragma solidity ^0.8.20;
+
+            contract ArtixNFT {
+                function mintMemeNFT(address creator, string memory tokenURI, uint8 network) public returns (uint256) {}
+            }
+          `
+        }
+      }
+    };
+
+    // Prepare contract deployment parameters
+    const deployParams = {
+      solidityVersion: "0.8.20",
+      solidityInputJson: JSON.stringify(solidityInput),
+      contractName: "ArtixNFT",
+      constructorArgs: {},
+      existingContractAddress: ARTIX_NFT_ADDRESS,
+      functionName: "mintMemeNFT",
+      functionArgs: {
+        creator: memeMetadata.creator,
+        tokenURI: memeMetadata.ipfsHash,
+        network: "3"
+      }
+    };
+
+    console.log('Attempting to mint NFT with params:', deployParams);
+
+    // Execute NFT minting
+    const mintTxHash = await deployContractAction.invoke(deployParams);
+    console.log('Mint transaction hash:', mintTxHash);
+    // const deployedContractAddress = 
+    // const deployedContractLink = 
+
+    // Extract contract address and transaction link from mintTxHash response
+    const addressMatch = mintTxHash.match(/address (0x[a-fA-F0-9]{40})/);
+    const linkMatch = mintTxHash.match(/(https:\/\/.*)/);
+    
+    const deployedContractAddress = addressMatch ? addressMatch[1] : null;
+    const deployedContractLink = linkMatch ? linkMatch[1] : null;
+
+    console.log('Deployed contract address:', deployedContractAddress);
+    console.log('Transaction link:', deployedContractLink);
+
+    // Post tweet about successful minting
+    if (scraper) {
+      try {
+        
+        console.log('mintTxHash', deployedContractAddress);
+        console.log('ARTIX_NFT_ADDRESS', ARTIX_NFT_ADDRESS);
+        console.log('shortenAddress(memeMetadata.creator)', shortenAddress(memeMetadata.creator));
+        console.log('voteCount', voteCount);
+        console.log('getOpenSeaUrl(ARTIX_NFT_ADDRESS, mintTxHash)', getOpenSeaUrl(ARTIX_NFT_ADDRESS, deployedContractAddress));
+        
+        // Extract Twitter username from social links
+        const twitterUsername = memeMetadata.socialLinks?.includes('twitter.com/') || memeMetadata.socialLinks?.includes('x.com/') 
+          ? '@' + memeMetadata.socialLinks.split('/').pop()
+          : memeMetadata.socialLinks;
+
+        const tweetContent = `🤖 Artix CDP Agent here! Just minted Meme #${memeId} as an NFT!\n\nCreator: ${shortenAddress(memeMetadata.creator)} ${twitterUsername}\nVotes: ${voteCount}\n\nContract Address: ${deployedContractAddress}\n\nTransaction Link: ${deployedContractLink}\n\nView on OpenSea: ${getOpenSeaUrl(ARTIX_NFT_ADDRESS, deployedContractAddress)}\n\n#ArtixNFT #Web3`;
+
+        console.log('tweetContent', tweetContent);
+
+        await scraper.sendTweet(tweetContent);
+      } catch (tweetError) {
+        console.warn('Failed to post NFT minting tweet:', tweetError);
+      }
+    }
+
+    res.json({
+      success: true,
+      transactionHash: mintTxHash,
+      message: 'NFT minting transaction submitted by CDP Agent',
+      contractAddress: ARTIX_NFT_ADDRESS,
+      agentAddress: walletDetails.address
+    });
+
+  } catch (error) {
+    console.error('Error in CDP mint endpoint:', error);
+    res.status(500).json({
+      error: 'Failed to mint NFT using CDP Agent',
+      details: error.message
+    });
+  }
+});
+
+
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'healthy', scraper: scraper ? 'initialized' : 'not initialized' });
@@ -300,5 +933,8 @@ app.get('/health', (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
   console.log(`Twitter agent server running on port ${PORT}`);
-  await initializeScraper();
+  await Promise.all([
+    initializeScraper(),
+    initializeCDPAgent()
+  ]);
 });
