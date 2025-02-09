@@ -1,7 +1,9 @@
 "use client";
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { formatEther } from 'viem';
+
 
 // const Logo = () => (
 //   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -12,12 +14,43 @@ import { useEffect, useState } from 'react';
 
 const Navbar = () => {
   const { login, authenticated, user, logout } = usePrivy();
+  const { wallets } = useWallets();
   const [scrolled, setScrolled] = useState(false);
   const [userDisplayName, setUserDisplayName] = useState<string>('');
   const [balance, setBalance] = useState<string>('0.00');
 
   console.log('balance', balance);
-  
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (wallets && wallets.length > 0) {
+        const wallet = wallets[0];
+        try {
+          const provider = await wallet.getEthereumProvider();
+          const publicClient = await provider.request({ 
+            method: 'eth_getBalance',
+            params: [wallet.address, 'latest']
+          });
+          
+          // Format balance from wei to ETH
+          const formattedBalance = formatEther(BigInt(publicClient));
+          // Round to 4 decimal places
+          setBalance(Number(formattedBalance).toFixed(4));
+        } catch (err) {
+          console.error('Error fetching balance:', err);
+          setBalance('0.00');
+        }
+      }
+    };
+
+    if (authenticated) {
+      fetchBalance();
+      // Refresh balance every 30 seconds
+      const interval = setInterval(fetchBalance, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [wallets, authenticated]);
+
   useEffect(() => {
     const handleScroll = () => {
       const offset = window.scrollY;
@@ -45,91 +78,84 @@ const Navbar = () => {
       } else {
         setUserDisplayName(user.id.slice(0, 6));
       }
-
-      if (user.wallet?.address) {
-        setBalance('0.01');
-      }
     }
   }, [user]);
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      scrolled ? 'bg-black/80 backdrop-blur-md' : 'bg-black/50'
+      scrolled ? 'bg-[#121212]/80 backdrop-blur-md' : 'bg-transparent'
     }`}>
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center">
-            <span className="text-yellow-400 font-bold text-xl">Logo</span>
+            <img src={'/logo.svg'} alt="Logo" className="w-10 h-10" />
           </Link>
 
           {/* Navigation Links */}
-          <div className="flex items-center gap-4">
-            <Link
-              to="/create"
-              className="flex items-center gap-1 bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-1.5 rounded-full text-sm font-medium"
-            >
-              <span>+ create</span>
-            </Link>
+          <div className="flex items-center gap-6">
+            {authenticated ? (
+              <div className="flex items-center gap-4">
+                <Link
+                  to="/create"
+                  className="flex items-center gap-1 bg-[#FFD700] hover:bg-[#FFD700]/90 text-[#121212] px-6 py-2 rounded-full text-sm font-semibold font-['Poppins'] transition-all duration-200"
+                >
+                  <span>+ create</span>
+                </Link>
 
-            <Link
-              to="/leaderboard"
-              className="text-white hover:text-yellow-400 text-sm font-medium"
-            >
-              leaderboard
-            </Link>
+                <Link
+                  to="/leaderboard"
+                  className="text-white hover:text-[#FFD700] text-sm font-medium font-['Poppins'] transition-colors"
+                >
+                  leaderboard
+                </Link>
 
-            {/* Right - Auth & Profile */}
-            <div className="flex items-center gap-4">
-              {authenticated ? (
-                <div className="flex items-center gap-3">
-                  {/* Combined Wallet & Profile Button */}
-                  <Link
-                    to="/my-page"
-                    className="flex items-center gap-3 px-4 py-2 bg-gray-900 hover:bg-gray-800 transition-all duration-200 rounded-4xl"
-                  >
-                    {/* {balance && (
-                      <span className="text-sm font-medium text-white">{balance} ET</span>
-                    )} */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-white">{userDisplayName}</span>
-                      <div className="w-6 h-6 rounded-sm bg-blue-500 flex items-center justify-center overflow-hidden">
-                        <img
-                          src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id || 'default'}`}
-                          alt="User Avatar"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </div>
-                  </Link>
-
-                  {/* Wallet Display */}
-                  <div className="flex items-center gap-2 bg-[#1A1A1A] rounded-full px-3 py-1.5">
-                    <span className="text-yellow-400 text-sm font-medium">0.01 ET</span>
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                {/* Wallet Display */}
+                <div className="flex items-center gap-2 bg-[#1A1A1A] backdrop-blur-sm rounded-full px-2 py-1 border border-[#FFD700]/20">
+                  <span className="text-[#FFD700] text-sm font-semibold font-['Poppins']">{balance} ETH</span>
+                  <span className="text-white/60 text-sm font-medium font-['Poppins']">{wallets?.[0]?.address?.slice(0, 6)}</span>
+                  
+                {/* User Avatar */}
+                <div className="flex items-center gap-2 bg-[#1A1A1A] hover:bg-[#1A1A1A]/80 transition-all duration-200 rounded-full px-3 py-1.5">
+                  <div className="w-7 h-7 rounded-full bg-[#010EFB] flex items-center justify-center overflow-hidden">
+                    <img
+                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id || 'default'}`}
+                      alt="User Avatar"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-
-                  {/* Logout Button */}
-                  <button 
-                    onClick={() => logout()}
-                    className="text-white hover:text-yellow-400"
-                    title="Logout"
-                    aria-label="Logout"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                  </button>
                 </div>
-              ) : (
+
+                </div>
+
+                {/* Logout Icon */}
+                <button
+                  onClick={() => logout()}
+                  className="text-white/60 hover:text-[#FFD700] transition-colors"
+                  aria-label="Logout"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-4">
+                <Link
+                  to="/leaderboard"
+                  className="text-white hover:text-[#FFD700] text-sm font-medium font-['Poppins'] transition-colors"
+                >
+                  leaderboard
+                </Link>
+                
                 <button
                   onClick={() => login()}
-                  className="bg-[#1A1A1A] hover:bg-[#2A2A2A] text-white px-4 py-1.5 rounded-full text-sm font-medium"
+                  className="bg-[#FFD700] hover:bg-[#FFD700]/90 text-[#121212] px-6 py-2 rounded-full text-sm font-semibold font-['Poppins'] transition-all duration-200"
                 >
-                  Connect Wallet
+                  connect wallet
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

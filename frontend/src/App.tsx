@@ -13,7 +13,11 @@ function App() {
   const { ready } = usePrivy();
 
   if (!ready) {
-    return <div>Loading...</div>;
+    return <div>
+      <div className="flex justify-center items-center h-screen">
+        <img src="/logo.svg" alt="logo" className="w-10 h-10" />
+      </div>
+    </div>;
   }
 
   return (

@@ -4,6 +4,7 @@ import { ethers } from 'ethers';
 import axios from 'axios';
 import ArtixMemeContestABI from '../abi/ArtixMemeContest.json';
 import ArtifactRankingABI from '../abi/ArtifactRanking.json';
+import { Link } from 'react-router-dom';
 
 const ARTIX_CONTRACT_ADDRESS = import.meta.env.VITE_ARTIX_CONTRACT_ADDRESS;
 const PINATA_API_KEY = import.meta.env.VITE_PINATA_API_KEY;
@@ -41,6 +42,7 @@ function CreateMeme() {
     socialLinks: '',
     networkId: '84532' // Default to Base Sepolia
   });
+  const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -197,6 +199,7 @@ function CreateMeme() {
       });
       
       alert('Meme submitted successfully! Transaction hash: ' + memeTx.hash);
+      setSubmissionSuccess(true);
     } catch (error: any) {
       console.error('Detailed error:', error);
       alert('Error submitting meme: ' + (error.message || 'Unknown error'));
@@ -295,301 +298,351 @@ function CreateMeme() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FB] pt-8 pb-16">
-      <div className="max-w-3xl mx-auto px-4">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-[32px] font-bold text-gray-900 mb-2">
-            Create Your Meme
-          </h1>
-          <p className="text-base text-gray-600">
-            Submit your meme to the Artix Meme Contest
-          </p>
+    <div className="relative min-h-screen bg-[#121212]">
+      {/* Background gradient */}
+      <div className="absolute" />
+
+        {/* Accent gradient div */}
+        <div className="relative w-full h-[300px] rounded-t-full overflow-hidden mt-22">
+          <div className="absolute inset-0 bg-gradient-to-b from-[#010EFB] to-[#121212] opacity-20" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <h1 className="text-[64px] font-bold text-white mb-2 font-['Poppins'] text-center">
+              Create Your Meme
+            </h1>
+            <p className="text-white/60 text-lg font-['Poppins'] text-center">
+              When your meme completes its bonding curve you receive XYZ
+            </p>
+          </div>
         </div>
+      
+      <div className="relative max-w-3xl mx-auto px-4 py-16">
 
         {/* Progress Steps */}
-        <div className="flex items-center justify-between mb-12">
-          <div className="flex-1 relative">
-            <div className={`h-0.5 absolute left-0 right-0 top-1/2 -translate-y-1/2 ${step >= 1 ? 'bg-blue-600' : 'bg-gray-200'}`} />
-            <div className="relative flex items-center justify-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                step >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
-              }`}>
-                1
-              </div>
-              <span className="absolute -bottom-6 text-sm font-medium text-gray-900">Meme information</span>
-            </div>
+        <div className="flex items-stretch w-full mb-12 bg-[#0A1D0A] rounded-full overflow-hidden h-12">
+          <div className={`flex-1 flex items-center gap-3 px-6 ${
+            step === 1 ? 'bg-[#143114]' : ''
+          }`}>
+            {step === 1 && (
+              <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+            )}
+            <span className={`text-base font-medium font-['Poppins'] ${
+              step === 1 ? 'text-white' : 'text-white/60'
+            }`}>1. meme</span>
           </div>
-          <div className="flex-1 relative">
-            <div className={`h-0.5 absolute left-0 right-0 top-1/2 -translate-y-1/2 ${step >= 2 ? 'bg-blue-600' : 'bg-gray-200'}`} />
-            <div className="relative flex items-center justify-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                step >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
-              }`}>
-                2
-              </div>
-              <span className="absolute -bottom-6 text-sm font-medium text-gray-600">Connect wallet</span>
-            </div>
+
+          <div className={`flex-1 flex items-center gap-3 px-6 ${
+            step === 2 ? 'bg-[#143114]' : ''
+          }`}>
+            {step === 2 && (
+              <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+            )}
+            <span className={`text-base font-medium font-['Poppins'] ${
+              step === 2 ? 'text-white' : 'text-white/60'
+            }`}>{authenticated ? '2. submit meme' : '2. connect wallet'}</span>
           </div>
-          <div className="flex-1 relative">
-            <div className={`h-0.5 absolute left-0 right-0 top-1/2 -translate-y-1/2 ${step >= 3 ? 'bg-blue-600' : 'bg-gray-200'}`} />
-            <div className="relative flex items-center justify-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                step >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
-              }`}>
-                3
-              </div>
-              <span className="absolute -bottom-6 text-sm font-medium text-gray-600">AI Marketing</span>
-            </div>
+
+          <div className={`flex-1 flex items-center gap-3 px-6 ${
+            step === 3 ? 'bg-[#143114]' : ''
+          }`}>
+            {step === 3 && (
+              <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+            )}
+            <span className={`text-base font-medium font-['Poppins'] ${
+              step === 3 ? 'text-white' : 'text-white/60'
+            }`}>3. AI Marketing</span>
           </div>
         </div>
 
-        {/* Form Section */}
-        <div className="bg-white p-8 shadow-sm">
-          {step === 1 && (
-            <>
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Upload Meme</h2>
-              
-              {/* Upload Method Selection */}
-              <div className="mb-6">
-                <div className="flex gap-4 mb-4">
-                  <button
-                    onClick={() => setUploadMethod('manual')}
-                    className={`flex-1 py-2 px-4 rounded ${
-                      uploadMethod === 'manual'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-600'
-                    }`}
-                  >
-                    Manual Upload
-                  </button>
-                  <button
-                    onClick={() => setUploadMethod('ai')}
-                    className={`flex-1 py-2 px-4 rounded ${
-                      uploadMethod === 'ai'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-600'
-                    }`}
-                  >
-                    AI Generate
-                  </button>
-                </div>
+        {/* Upload Method Selection */}
+        <div className="flex gap-2 mb-8 bg-[#1A1A1A] p-1 rounded-full max-w-md mx-auto">
+          <button
+            onClick={() => setUploadMethod('ai')}
+            className={`flex-1 px-6 py-2.5 rounded-full font-['Poppins'] font-medium transition-all ${
+              uploadMethod === 'ai' 
+                ? 'bg-[#FFD700] text-[#121212]' 
+                : 'text-white/60 hover:text-white'
+            }`}
+          >
+            generate with ai
+          </button>
+          <button
+            onClick={() => setUploadMethod('manual')}
+            className={`flex-1 px-6 py-2.5 rounded-full font-['Poppins'] font-medium transition-all ${
+              uploadMethod === 'manual' 
+                ? 'bg-[#1A1A1A] text-[#FFD700] border border-[#FFD700]' 
+                : 'text-white/60 hover:text-white'
+            }`}
+          >
+            upload your meme
+          </button>
+        </div>
 
-                {uploadMethod === 'ai' && !imagePreview && (
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Describe your meme
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={aiPrompt}
-                        onChange={(e) => setAiPrompt(e.target.value)}
-                        placeholder="E.g., A funny cat wearing sunglasses and riding a skateboard"
-                        className="flex-1 px-4 py-2 bg-[#F3F4F6] border border-gray-200 rounded text-gray-900 text-sm focus:outline-none focus:border-blue-600"
-                      />
-                      <button
-                        onClick={generateAIMeme}
-                        disabled={!aiPrompt || isGeneratingAI}
-                        className={`px-4 py-2 rounded text-white text-sm font-medium ${
-                          !aiPrompt || isGeneratingAI ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'
-                        }`}
-                      >
-                        {isGeneratingAI ? 'Generating...' : 'Generate'}
-                      </button>
-                    </div>
-                  </div>
-                )}
+        <p className="text-white/60 text-center text-sm mb-8 font-['Poppins']">
+          You can either generate your memes with our AI superpowers or<br />
+          upload your own meme that you created before
+        </p>
 
-                {uploadMethod === 'manual' && !imagePreview ? (
-                  <div className="relative">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                      id="meme-upload"
-                    />
-                    <label
-                      htmlFor="meme-upload"
-                      className="block w-full aspect-square bg-[#F3F4F6] border-2 border-dashed border-gray-300 rounded-sm cursor-pointer"
-                    >
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <div className="w-10 h-10 mb-2 text-gray-400">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                          </svg>
-                        </div>
-                        <button className="px-4 py-2 bg-blue-600 text-white text-sm font-medium">
-                          Upload Meme Image
-                        </button>
-                      </div>
-                    </label>
-                  </div>
-                ) : imagePreview && (
-                  <div className="relative w-full aspect-square bg-[#F3F4F6] rounded-sm">
-                    <img
-                      src={imagePreview}
-                      alt="Uploaded meme"
-                      className="w-full h-full object-contain"
-                    />
-                    <button
-                      onClick={handleRemoveImage}
-                      className="absolute top-4 right-4 px-3 py-1 bg-white/90 text-sm text-gray-900 rounded-full shadow-sm"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Form Fields */}
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-                    Title
-                  </label>
-                  <input
-                    id="title"
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleInputChange}
-                    placeholder="Enter meme title"
-                    className="w-full px-4 py-2 bg-[#F3F4F6] border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-blue-600"
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
-                  </label>
+        {/* Main Form Section */}
+        {step === 1 && (
+          <div className="flex gap-8">
+            {/* Left Column - Upload/Preview */}
+            <div className="w-1/2 space-y-6">
+              {uploadMethod === 'ai' ? (
+                <div className="space-y-6">
                   <textarea
-                    id="description"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    placeholder="Enter meme description"
-                    rows={4}
-                    className="w-full px-4 py-2 bg-[#F3F4F6] border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-blue-600"
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    placeholder="write your prompt to generate meme"
+                    className="w-full h-32 px-6 py-4 bg-[#1A1A1A] text-white placeholder-white/40 rounded-2xl border border-[#FFD700]/20 focus:border-[#FFD700] focus:outline-none font-['Poppins']"
                   />
-                </div>
-
-                <div>
-                  <label htmlFor="socialLinks" className="block text-sm font-medium text-gray-700 mb-1">
-                    Social Links
-                  </label>
-                  <input
-                    id="socialLinks"
-                    type="text"
-                    name="socialLinks"
-                    value={formData.socialLinks}
-                    onChange={handleInputChange}
-                    placeholder="Enter your social media links"
-                    className="w-full px-4 py-2 bg-[#F3F4F6] border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-blue-600"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="networkId" className="block text-sm font-medium text-gray-700 mb-1">
-                    Network
-                  </label>
-                  <select
-                    id="networkId"
-                    name="networkId"
-                    value={formData.networkId}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 bg-[#F3F4F6] border border-gray-200 text-gray-600 text-sm focus:outline-none focus:border-blue-600"
+                  <button
+                    onClick={generateAIMeme}
+                    disabled={!aiPrompt || isGeneratingAI}
+                    className={`group w-full px-6 py-3 rounded-full font-['Poppins'] font-medium transition-all relative ${
+                      !aiPrompt || isGeneratingAI 
+                        ? 'bg-[#1A1A1A]/50 text-white/60' 
+                        : 'bg-[#FFD700] text-[#121212] hover:bg-[#FFD700]/90'
+                    }`}
                   >
-                    <option value="84532">Base Sepolia</option>
-                  </select>
+                    {isGeneratingAI ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        <span>generating...</span>
+                      </div>
+                    ) : (
+                      <span>generate meme</span>
+                    )}
+                  </button>
                 </div>
-              </div>
+              ) : (
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="meme-upload"
+                  />
+                  <label
+                    htmlFor="meme-upload"
+                    className="block w-full aspect-square bg-[#1A1A1A] border-2 border-dashed border-[#FFD700]/20 rounded-2xl cursor-pointer hover:border-[#FFD700]/40 transition-colors"
+                  >
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <div className="w-12 h-12 mb-4 text-[#FFD700]/60">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                      </div>
+                      <span className="text-white/60 font-['Poppins']">Click to upload your meme</span>
+                    </div>
+                  </label>
+                </div>
+              )}
 
-              {/* Royalty Agreement */}
-              <div className="mt-6 flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="royalty"
-                  checked={acceptRoyalty}
-                  onChange={(e) => setAcceptRoyalty(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <label htmlFor="royalty" className="text-sm text-gray-600">
+              {imagePreview && (
+                <div className="relative w-full aspect-square bg-[#1A1A1A] rounded-2xl overflow-hidden">
+                  <img
+                    src={imagePreview}
+                    alt="Uploaded meme"
+                    className="w-full h-full object-contain"
+                  />
+                  <button
+                    onClick={handleRemoveImage}
+                    className="absolute top-4 right-4 px-4 py-2 bg-[#121212]/80 backdrop-blur-sm text-white rounded-full font-['Poppins'] hover:bg-[#121212] transition-colors"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Right Column - Form Fields */}
+            <div className="w-1/2 space-y-4">
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleInputChange}
+                placeholder="title of your meme"
+                className="w-full px-6 py-4 bg-[#1A1A1A] text-white placeholder-white/40 rounded-full border border-[#FFD700]/20 focus:border-[#FFD700] focus:outline-none font-['Poppins']"
+              />
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                placeholder="description of your meme"
+                rows={4}
+                className="w-full px-6 py-4 bg-[#1A1A1A] text-white placeholder-white/40 rounded-2xl border border-[#FFD700]/20 focus:border-[#FFD700] focus:outline-none font-['Poppins']"
+              />
+
+              <input
+                type="text"
+                name="socialLinks"
+                value={formData.socialLinks}
+                onChange={handleInputChange}
+                placeholder="your social link (x.com)"
+                className="w-full px-6 py-4 bg-[#1A1A1A] text-white placeholder-white/40 rounded-2xl border border-[#FFD700]/20 focus:border-[#FFD700] focus:outline-none font-['Poppins']"
+              />
+
+              <select
+                name="networkId"
+                value={formData.networkId}
+                onChange={handleInputChange}
+                className="w-full px-6 py-4 bg-[#1A1A1A] text-white/60 rounded-full border border-[#FFD700]/20 focus:border-[#FFD700] focus:outline-none font-['Poppins'] appearance-none"
+              >
+                <option value="84532">select network</option>
+                <option value="84532">Base Sepolia</option>
+              </select>
+
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    id="royalty"
+                    checked={acceptRoyalty}
+                    onChange={(e) => setAcceptRoyalty(e.target.checked)}
+                    className="sr-only"
+                  />
+                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                    acceptRoyalty 
+                      ? 'border-[#FFD700] bg-[#FFD700]' 
+                      : 'border-[#FFD700]/20 bg-transparent'
+                  }`}>
+                    {acceptRoyalty && (
+                      <div className="w-3 h-3 rounded-full bg-[#121212]" />
+                    )}
+                  </div>
+                </div>
+                <label htmlFor="royalty" className="text-white/60 font-['Poppins']">
                   I confirm that I accept the 3% royalty fee.
                 </label>
               </div>
 
-              {/* Next Button */}
               <button
-                onClick={handleNext}
+                onClick={authenticated ? handleNext : login}
                 disabled={!acceptRoyalty || !imageFile || !formData.title}
-                className={`mt-8 w-full py-3 ${
-                  !acceptRoyalty || !imageFile || !formData.title ? 'bg-gray-400' : 'bg-blue-600'
-                } text-white font-medium transition-colors`}
+                className={`w-full px-6 py-4 rounded-full font-['Poppins'] font-medium transition-all ${
+                  !acceptRoyalty || !imageFile || !formData.title
+                    ? 'bg-[#1A1A1A]/50 text-white/60'
+                    : 'bg-[#FFD700] text-[#121212] hover:bg-[#FFD700]/90'
+                }`}
               >
-                Next Step
+                {authenticated ? 'next: submit meme →' : 'connect wallet to continue →'}
               </button>
-            </>
-          )}
-
-          {step === 2 && (
-            <div className="py-12">
-              <div className="text-center">
-                {!authenticated ? (
-                  <>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Connect Your Wallet</h2>
-                    <p className="text-gray-600 mb-8">Please connect your wallet to continue</p>
-                    <button
-                      onClick={login}
-                      className="px-6 py-3 bg-blue-600 text-white font-medium"
-                    >
-                      Connect Wallet
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Submit Your Meme</h2>
-                    <p className="text-gray-600 mb-8">Ready to submit your meme to the blockchain</p>
-                    <div className="flex justify-between gap-4">
-                      <button
-                        onClick={handlePrevious}
-                        className="flex-1 py-3 border border-blue-600 text-blue-600 font-medium"
-                      >
-                        Previous
-                      </button>
-                      <button
-                        onClick={submitMeme}
-                        disabled={isUploading}
-                        className={`flex-1 py-3 ${
-                          isUploading ? 'bg-gray-400' : 'bg-blue-600'
-                        } text-white font-medium`}
-                      >
-                        {isUploading ? 'Uploading...' : 'Submit Meme'}
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {step === 3 && (
-            <div className="py-12">
+        {step === 2 && (
+          <div className="flex flex-col items-center justify-center py-16">
+            {!authenticated ? (
               <div className="text-center">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">AI Marketing</h2>
-                <p className="text-gray-600 mb-8">Coming soon...</p>
-                
+                <h2 className="text-2xl font-bold text-white mb-6 font-['Poppins']">Connect Your Wallet</h2>
+                <p className="text-white/60 mb-8 font-['Poppins'] max-w-sm">
+                  Connect your wallet to submit your meme to the blockchain
+                </p>
                 <button
-                  onClick={handlePrevious}
-                  className="px-6 py-3 border border-blue-600 text-blue-600 font-medium"
+                  onClick={login}
+                  className="px-8 py-4 bg-[#FFD700] text-[#121212] rounded-full font-['Poppins'] font-medium hover:bg-[#FFD700]/90 transition-all"
                 >
-                  Back to Submission
+                  connect wallet
                 </button>
               </div>
+            ) : submissionSuccess ? (
+              <div className="text-center">
+                <div className="w-16 h-16 mb-6">
+                  <svg className="w-full h-full text-[#FFD700]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-4 font-['Poppins']">Meme Submitted Successfully!</h2>
+                <p className="text-white/60 mb-8 font-['Poppins'] max-w-sm">
+                  Your meme has been successfully submitted to the blockchain.
+                </p>
+                <div className="flex gap-4">
+                  <Link
+                    to="/explore"
+                    className="px-8 py-4 bg-[#FFD700] text-[#121212] rounded-full font-['Poppins'] font-medium hover:bg-[#FFD700]/90 transition-all"
+                  >
+                    discover memes →
+                  </Link>
+                  <Link
+                    to="/"
+                    className="px-8 py-4 bg-[#1A1A1A] text-white rounded-full font-['Poppins'] font-medium hover:bg-[#1A1A1A]/80 transition-all"
+                  >
+                    back to home
+                  </Link>
+                </div>
+              </div>
+            ) : isUploading ? (
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-6">
+                  <svg className="animate-spin w-full h-full text-[#FFD700]" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-4 font-['Poppins']">Submitting Your Meme</h2>
+                <p className="text-white/60 mb-8 font-['Poppins'] max-w-sm">
+                  Please wait while we submit your meme to the blockchain...
+                </p>
+              </div>
+            ) : (
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-white mb-4 font-['Poppins']">Ready to Submit</h2>
+                <p className="text-white/60 mb-8 font-['Poppins'] max-w-sm">
+                  Your meme is ready to be submitted to the blockchain
+                </p>
+                <div className="flex gap-4">
+                  <button
+                    onClick={handlePrevious}
+                    className="px-8 py-4 bg-[#1A1A1A] text-white rounded-full font-['Poppins'] font-medium hover:bg-[#1A1A1A]/80 transition-all"
+                  >
+                    ← previous
+                  </button>
+                  <button
+                    onClick={submitMeme}
+                    className="px-8 py-4 bg-[#FFD700] text-[#121212] rounded-full font-['Poppins'] font-medium hover:bg-[#FFD700]/90 transition-all"
+                  >
+                    submit meme
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {step === 3 && (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="w-16 h-16 mb-6">
+              <svg className="w-full h-full text-[#FFD700]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
             </div>
-          )}
-        </div>
+            <h2 className="text-2xl font-bold text-white mb-4 font-['Poppins']">AI Marketing Coming Soon</h2>
+            <p className="text-white/60 mb-8 font-['Poppins'] max-w-sm">
+              We're working on something magical to help promote your memes with AI. Stay tuned!
+            </p>
+            <button
+              onClick={handlePrevious}
+              className="px-8 py-4 bg-[#1A1A1A] text-white rounded-full font-['Poppins'] font-medium hover:bg-[#1A1A1A]/80 transition-all"
+            >
+              ← back to submission
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
