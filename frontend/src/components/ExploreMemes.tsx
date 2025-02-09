@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { ethers } from 'ethers';
 import ArtixMemeContestABI from '../abi/ArtixMemeContest.json';
-import ArtifactNFTABI from '../abi/ArtifactNFT.json';
+// import ArtifactNFTABI from '../abi/ArtifactNFT.json';
 import ArtifactRankingABI from '../abi/ArtifactRanking.json';
-import { uploadToPinata } from '../utils/pinata';
+// import { uploadToPinata } from '../utils/pinata';
 import AIMarketing from './AIMarketing';
 
 const ARTIX_CONTRACT_ADDRESS = import.meta.env.VITE_ARTIX_CONTRACT_ADDRESS;
-const ARTIX_NFT_CONTRACT_ADDRESS = import.meta.env.VITE_ARTIX_NFT_CONTRACT_ADDRESS;
+// const ARTIX_NFT_CONTRACT_ADDRESS = import.meta.env.VITE_ARTIX_NFT_CONTRACT_ADDRESS;
 const ARTIX_RANKING_CONTRACT_ADDRESS = import.meta.env.VITE_ARTIX_RANKING_CONTRACT_ADDRESS;
 const CDP_AGENT_URL = import.meta.env.VITE_CDP_AGENT_URL;
 
@@ -53,15 +53,15 @@ interface ConnectedWallet {
   getEthereumProvider: () => Promise<any>;
 }
 
-interface Event {
-  event: string;
-  args: {
-    tokenId: { toString: () => string };
-    creator: string;
-    tokenURI: string;
-    network: number;
-  };
-}
+// interface Event {
+//   event: string;
+//   args: {
+//     tokenId: { toString: () => string };
+//     creator: string;
+//     tokenURI: string;
+//     network: number;
+//   };
+// }
 
 function ExploreMemes() {
   const { authenticated, login, user } = usePrivy();
