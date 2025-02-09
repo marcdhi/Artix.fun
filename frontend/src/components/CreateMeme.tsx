@@ -298,7 +298,7 @@ function CreateMeme() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#121212]">
+    <div className="relative min-h-screen">
       {/* Background gradient */}
       <div className="absolute" />
 
