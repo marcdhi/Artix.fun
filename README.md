@@ -58,6 +58,8 @@ In the past, meme creators **did not receive proper recognition or rewards**, ev
 **🔹 Base - Cost-Effective & Scalable Smart Contracts**
 - We deployed all smart contracts on Base, an Ethereum Layer 2 network, to optimize for low-cost transactions, scalability, and security. This allows for efficient on-chain voting, NFT minting, and reward distribution without high gas fees, making it accessible for a wider audience. (All deployed contract addresses can be attached here.)
 
+## Demo preview
+
 ---
 
 # Frontend
