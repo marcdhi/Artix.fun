@@ -5,7 +5,7 @@
   <a href="https://artixfun.vercel.app/" style="color: #a77dff">Platform</a> | <a href="https://www.figma.com/deck/2SOyNcL3NwvpAuOzHHwfty" style="color: #a77dff">Pitchdeck</a> | <a href="" style="color: #a77dff">Demo Video</a>
 </p>
 <p align="center">
-  <a href="https://github.com/marcdhi/Artix.fun/tree/main/artixContracts/contracts" style="color: #a77dff">Base(NFT&Vote Contract)</a> | <a href="" style="color: #a77dff">Privy(Auth&Wallets)</a> | <a href="" style="color: #a77dff">Coinbase Developer Kit(Agent NFT Mint)</a> | <a href="" style="color: #a77dff">Autonome(AI agent)</a>
+  <a href="https://github.com/marcdhi/Artix.fun/blob/main/artixContracts/ignition/deployments/chain-84532/deployed_addresses.json" style="color: #a77dff">Base(NFT&Vote Contract)</a> | <a href="https://github.com/marcdhi/Artix.fun/blob/main/frontend/src/main.tsx" style="color: #a77dff">Privy(Auth&Wallets)</a> | <a href="https://github.com/marcdhi/Artix.fun/blob/main/agents/twitter-agent.js" style="color: #a77dff">Coinbase Developer Kit(Agent NFT Mint)</a> | <a href="https://github.com/marcdhi/Artix.fun/blob/main/agents/twitter-agent.js" style="color: #a77dff">Autonome(AI agent)</a>
 
 ---
 
@@ -43,6 +43,20 @@ In the past, meme creators **did not receive proper recognition or rewards**, ev
     - Users can accumulate points and **mint their own NFTs**.
     - These NFTs display **which memes the user voted for, how much they contributed, and their ranking**.
     - This creates a **leaderboard system** where users can track their voting influence.
+
+## How to use the Sponsor
+
+**🔹 Privy - Seamless User Onboarding & Authentication**
+- We integrated Privy to provide a seamless and secure onboarding experience for all users. By configuring Coinbase Wallet, Google Auth, Email Login, MetaMask, and Phantom Wallet, we enable both Web3-native and non-Web3 users to easily sign up and participate in on-chain voting, NFT minting, and meme contests without friction. This ensures broad accessibility while maintaining security and ease of use.
+
+**🔹 Autonome - AI-Powered Meme Minting & Marketing**
+- To automate meme NFT minting and marketing, we developed a Node.js backend that uses AI agents to manage these tasks. The AI agent, Artix, automatically mints NFTs for winning memes and promotes them on Twitter, ensuring viral marketing and increased visibility. The entire application is Dockerized and deployed on the Autonome platform, providing a scalable and autonomous system for meme activation.
+
+**🔹 Coinbase Developer Kit - AI Agent Wallet for NFT Minting**
+- We leveraged Coinbase’s AgentKit and SDK to develop an AI-powered agent wallet responsible for automatically minting NFTs when a meme reaches the top-voted threshold. This ensures a secure, verifiable, and decentralized ownership process, reducing manual intervention while enhancing automation. (GitHub source code for the agent implementation can be attached here.)
+
+**🔹 Base - Cost-Effective & Scalable Smart Contracts**
+- We deployed all smart contracts on Base, an Ethereum Layer 2 network, to optimize for low-cost transactions, scalability, and security. This allows for efficient on-chain voting, NFT minting, and reward distribution without high gas fees, making it accessible for a wider audience. (All deployed contract addresses can be attached here.)
 
 ---
 
