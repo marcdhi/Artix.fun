@@ -16,6 +16,9 @@ function AIMarketing({ meme }: { meme: Meme }) {
   const [error, setError] = useState<string | null>(null);
   const [tweetText, setTweetText] = useState<string | null>(null);
 
+  console.log(error)
+  console.log(tweetText)
+
   // Check if current user is the creator
   const isCreator = user?.wallet?.address?.toLowerCase() === meme.creator.toLowerCase();
 

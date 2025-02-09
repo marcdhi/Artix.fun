@@ -440,6 +440,9 @@ function ExploreMemes() {
     return new Date(timestamp * 1000).toLocaleDateString();
   };
 
+  console.log(formatDate(1712832000))
+
+
   const getIPFSGatewayURL = (ipfsHash: string) => {
     const hash = ipfsHash.replace('ipfs://', '');
     return `https://ipfs.io/ipfs/${hash}`;
@@ -456,6 +459,8 @@ function ExploreMemes() {
     if (meme.hasVoted) return 'Already Voted';
     return `Vote (${ethers.utils.formatEther(votingConfig?.voteCost || '0')} ETH)`;
   };
+
+  console.log(getVoteButtonText(memes[0], 'loading'))
 
   return (
     <div className="relative min-h-screen">

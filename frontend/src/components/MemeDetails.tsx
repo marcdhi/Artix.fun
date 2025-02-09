@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { usePrivy, useWallets } from '@privy-io/react-auth';
+import { usePrivy } from '@privy-io/react-auth';
 import { ethers } from 'ethers';
 import ArtixMemeContestABI from '../abi/ArtixMemeContest.json';
-import ArtifactRankingABI from '../abi/ArtifactRanking.json';
+
 import AIMarketing from './AIMarketing';
 
 const ARTIX_CONTRACT_ADDRESS = import.meta.env.VITE_ARTIX_CONTRACT_ADDRESS;
-const ARTIX_RANKING_CONTRACT_ADDRESS = import.meta.env.VITE_ARTIX_RANKING_CONTRACT_ADDRESS;
+
 
 // Base Sepolia network parameters
 const BASE_SEPOLIA_PARAMS = {
@@ -34,8 +34,8 @@ interface Meme {
 
 function MemeDetails() {
   const { id } = useParams();
-  const { authenticated, login, user } = usePrivy();
-  const { wallets } = useWallets();
+  const { authenticated, user } = usePrivy();
+  // const { wallets } = useWallets();
   const [meme, setMeme] = useState<Meme | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +44,8 @@ function MemeDetails() {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 7;
   const [loadingTrending, setLoadingTrending] = useState(true);
+
+  console.log(setVotingStatus)
 
   const getIPFSGatewayURL = (ipfsHash: string) => {
     const hash = ipfsHash.replace('ipfs://', '');
@@ -83,8 +85,9 @@ function MemeDetails() {
         voteCount: memeData.voteCount.toNumber(),
         submissionTime: memeData.submissionTime.toNumber(),
         isActive: memeData.isActive,
-        hasBeenMinted: memeData.hasBeenMinted
-      };
+        hasBeenMinted: memeData.hasBeenMinted,
+        hasVoted: false
+      } as Meme;
 
       // Check if user has voted if authenticated
       if (authenticated && user?.wallet?.address) {
@@ -128,9 +131,14 @@ function MemeDetails() {
               creator: meme.creator,
               ipfsHash: meme.ipfsHash,
               title: meme.title,
+              description: '',
+              socialLinks: '',
+              networkId: 0,
               voteCount: meme.voteCount.toNumber(),
+              submissionTime: 0,
+              isActive: true,
               hasBeenMinted: meme.hasBeenMinted
-            };
+            } as Meme;
             memesList.push(memeData);
           }
           memeId++;

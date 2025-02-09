@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { ethers } from 'ethers';
 import ArtixMemeContestABI from '../abi/ArtixMemeContest.json';
 

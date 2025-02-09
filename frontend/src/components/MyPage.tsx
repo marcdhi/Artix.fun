@@ -70,7 +70,7 @@ const MyPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isTwitterEnabled, setIsTwitterEnabled] = useState(true);
   const [isInstagramEnabled, setIsInstagramEnabled] = useState(true);
-  const [activeTab, setActiveTab] = useState('voting');
+  // const [activeTab, setActiveTab] = useState('voting');
   const [voteFilter, setVoteFilter] = useState<'highest' | 'lowest'>('highest');
   const [votingStatus, setVotingStatus] = useState<'voting' | 'minted' | 'closed'>('voting');
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,6 +82,8 @@ const MyPage = () => {
   const [votedMemes, setVotedMemes] = useState<VotedMeme[]>([]);
   const ITEMS_PER_PAGE = 9;
   const [loadingLogs, setLoadingLogs] = useState<string[]>([]);
+
+  console.log(error)
 
   // Add logging for state changes
   useEffect(() => {
@@ -266,6 +268,7 @@ const MyPage = () => {
             });
           }
         } catch (e) {
+          console.log(e)
           break;
         }
       }
@@ -526,11 +529,11 @@ const MyPage = () => {
           </div>
           {/* Rank Labels */}
           <div className="flex justify-between text-sm">
-            <span className={rankingData?.currentRank >= 0 ? 'text-[#FFD700]' : 'text-white/60'}>Novice</span>
-            <span className={rankingData?.currentRank >= 1 ? 'text-[#FFD700]' : 'text-white/60'}>Enthusiast</span>
-            <span className={rankingData?.currentRank >= 2 ? 'text-[#FFD700]' : 'text-white/60'}>Master</span>
-            <span className={rankingData?.currentRank >= 3 ? 'text-[#FFD700]' : 'text-white/60'}>Legend</span>
-            <span className={rankingData?.currentRank >= 4 ? 'text-[#FFD700]' : 'text-white/60'}>God</span>
+            <span className={rankingData && rankingData.currentRank >= 0 ? 'text-[#FFD700]' : 'text-white/60'}>Novice</span>
+            <span className={rankingData && rankingData.currentRank >= 1 ? 'text-[#FFD700]' : 'text-white/60'}>Enthusiast</span>
+            <span className={rankingData && rankingData.currentRank >= 2 ? 'text-[#FFD700]' : 'text-white/60'}>Master</span>
+            <span className={rankingData && rankingData.currentRank >= 3 ? 'text-[#FFD700]' : 'text-white/60'}>Legend</span>
+            <span className={rankingData && rankingData.currentRank >= 4 ? 'text-[#FFD700]' : 'text-white/60'}>God</span>
           </div>
         </div>
 
