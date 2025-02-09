@@ -5,13 +5,6 @@ import { useEffect, useState } from 'react';
 import { formatEther } from 'viem';
 
 
-// const Logo = () => (
-//   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-//     <path d="M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-//     <path d="M8.5 10L12 13.5L15.5 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-//   </svg>
-// );
-
 const Navbar = () => {
   const { login, authenticated, user, logout } = usePrivy();
   const { wallets } = useWallets();
@@ -20,6 +13,8 @@ const Navbar = () => {
   const [balance, setBalance] = useState<string>('0.00');
 
   console.log('balance', balance);
+  console.log('user', user);
+  console.log('userDisplayName', userDisplayName);
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -111,7 +106,7 @@ const Navbar = () => {
                 </Link>
 
                 {/* Wallet Display */}
-                <div className="flex items-center gap-2 bg-[#1A1A1A] backdrop-blur-sm rounded-full px-2 py-1 border border-[#FFD700]/20">
+                <Link to="/my-page" className="flex items-center gap-2 bg-[#1A1A1A] backdrop-blur-sm rounded-full px-2 py-1 border border-[#FFD700]/20">
                   <span className="text-[#FFD700] text-sm font-semibold font-['Poppins']">{balance} ETH</span>
                   <span className="text-white/60 text-sm font-medium font-['Poppins']">{wallets?.[0]?.address?.slice(0, 6)}</span>
                   
@@ -126,7 +121,7 @@ const Navbar = () => {
                   </div>
                 </div>
 
-                </div>
+                </Link>
 
                 {/* Logout Icon */}
                 <button
