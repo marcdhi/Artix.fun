@@ -1,7 +1,7 @@
 <h1 align="center">Artix.fun</h1>
 
 <p align="center">
-  <a href="https://artixfun.vercel.app/" style="color: #a77dff">Artix.fun</a> | <a href="" style="color: #a77dff">Pitchdeck</a> | <a href="" style="color: #a77dff">Base(NFT&Vote Contract)</a> | <a href="" style="color: #a77dff">Privy(Auth&Wallets)</a> | <a href="" style="color: #a77dff">Autonome or Gaia(AI agent)</a>
+  <a href="https://artixfun.vercel.app/" style="color: #a77dff">Artix.fun</a> | <a href="" style="color: #a77dff">Pitchdeck</a> | <a href="https://github.com/marcdhi/Artix.fun/tree/main/artixContracts/contracts" style="color: #a77dff">Base(NFT&Vote Contract)</a> | <a href="" style="color: #a77dff">Privy(Auth&Wallets)</a> | <a href="" style="color: #a77dff">Autonome or Gaia(AI agent)</a>
 </p>
 
 <p align="center">Meme Contest DAO Platform</p>
