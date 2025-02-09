@@ -6,6 +6,7 @@ import ArtixMemeContestABI from '../abi/ArtixMemeContest.json';
 import ArtifactRankingABI from '../abi/ArtifactRanking.json';
 // import { uploadToPinata } from '../utils/pinata';
 import AIMarketing from './AIMarketing';
+import { Link } from 'react-router-dom';
 
 const ARTIX_CONTRACT_ADDRESS = import.meta.env.VITE_ARTIX_CONTRACT_ADDRESS;
 // const ARTIX_NFT_CONTRACT_ADDRESS = import.meta.env.VITE_ARTIX_NFT_CONTRACT_ADDRESS;
@@ -577,13 +578,16 @@ function ExploreMemes() {
         ) : (
           <div className="grid grid-cols-3 gap-8">
             {filteredMemes.map((meme) => (
-              <div key={meme.id} className="relative bg-[#1A1A1A] rounded-3xl overflow-hidden flex flex-col h-[480px]">
+              <div key={meme.id} className="relative bg-[#1A1A1A] rounded-3xl overflow-hidden flex flex-col h-[480px] group">
                 {/* Top Bar - Fixed height */}
-                <div className="h-12 bg-black/60 backdrop-blur-sm flex items-center justify-between px-4 flex-shrink-0">
+                <div className="h-12 bg-black/60 backdrop-blur-sm flex items-center justify-between px-4 flex-shrink-0 z-10">
                   {/* Left side - Vote */}
                   <div className="flex items-center gap-2">
                     <button 
-                      onClick={() => voteMeme(meme.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        voteMeme(meme.id);
+                      }}
                       disabled={!authenticated || meme.hasVoted || votingStatus[meme.id] === 'loading'}
                       className="relative group"
                     >
@@ -622,29 +626,37 @@ function ExploreMemes() {
                   )}
                 </div>
 
-                {/* Meme Image - Fixed height with overflow hidden */}
-                <div className="h-[300px] flex-shrink-0 overflow-hidden">
-                  <img 
-                    src={getIPFSGatewayURL(meme.ipfsHash)}
-                    alt={meme.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
-                {/* Content - Fixed height */}
-                <div className="p-4 bg-[#1A1A1A] flex-1 flex flex-col">
-                  <h3 className="text-white text-lg font-semibold font-['Poppins'] mb-2 line-clamp-1">{meme.title}</h3>
-                  <p className="text-white/60 text-sm font-['Poppins'] line-clamp-2 mb-auto">{meme.description}</p>
-                  
-                  <div className="flex items-center justify-between mt-4">
-                    <span className="text-white/40 text-sm">
-                      by {formatAddress(meme.creator)}
-                    </span>
-                    {meme.voteCount >= (votingConfig?.minVotesForWin || 0) && (
-                      <AIMarketing meme={meme} />
-                    )}
+                {/* Clickable area */}
+                <Link 
+                  to={`/meme/${meme.id}`} 
+                  className="flex flex-col flex-1"
+                >
+                  {/* Meme Image - Fixed height with overflow hidden */}
+                  <div className="h-[300px] flex-shrink-0 overflow-hidden">
+                    <img 
+                      src={getIPFSGatewayURL(meme.ipfsHash)}
+                      alt={meme.title}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
                   </div>
-                </div>
+
+                  {/* Content - Fixed height */}
+                  <div className="p-4 bg-[#1A1A1A] flex-1 flex flex-col">
+                    <h3 className="text-white text-lg font-semibold font-['Poppins'] mb-2 line-clamp-1">{meme.title}</h3>
+                    <p className="text-white/60 text-sm font-['Poppins'] line-clamp-2 mb-auto">{meme.description}</p>
+                    
+                    <div className="flex items-center justify-between mt-4">
+                      <span className="text-white/40 text-sm">
+                        by {formatAddress(meme.creator)}
+                      </span>
+                      {meme.voteCount >= (votingConfig?.minVotesForWin || 0) && (
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <AIMarketing meme={meme} />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Link>
               </div>
             ))}
           </div>
