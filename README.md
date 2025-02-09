@@ -53,10 +53,10 @@ In the past, meme creators **did not receive proper recognition or rewards**, ev
 - To automate meme NFT minting and marketing, we developed a Node.js backend that uses AI agents to manage these tasks. The AI agent, Artix, automatically mints NFTs for winning memes and promotes them on Twitter, ensuring viral marketing and increased visibility. The entire application is Dockerized and deployed on the Autonome platform, providing a scalable and autonomous system for meme activation.
 
 **🔹 Coinbase Developer Kit - AI Agent Wallet for NFT Minting**
-- We leveraged Coinbase’s AgentKit and SDK to develop an AI-powered agent wallet responsible for automatically minting NFTs when a meme reaches the top-voted threshold. This ensures a secure, verifiable, and decentralized ownership process, reducing manual intervention while enhancing automation. (GitHub source code for the agent implementation can be attached here.)
+- We leveraged Coinbase’s AgentKit and SDK to develop an AI-powered agent wallet responsible for automatically minting NFTs when a meme reaches the top-voted threshold. This ensures a secure, verifiable, and decentralized ownership process, reducing manual intervention while enhancing automation. 
 
 **🔹 Base - Cost-Effective & Scalable Smart Contracts**
-- We deployed all smart contracts on Base, an Ethereum Layer 2 network, to optimize for low-cost transactions, scalability, and security. This allows for efficient on-chain voting, NFT minting, and reward distribution without high gas fees, making it accessible for a wider audience. (All deployed contract addresses can be attached here.)
+- We deployed all smart contracts on Base, an Ethereum Layer 2 network, to optimize for low-cost transactions, scalability, and security. This allows for efficient on-chain voting, NFT minting, and reward distribution without high gas fees, making it accessible for a wider audience. 
 
 ## Demo preview
 ![home](https://github.com/user-attachments/assets/8527ed40-b982-4b45-8dd3-8d9d07397ee4)
