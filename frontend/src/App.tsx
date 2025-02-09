@@ -7,13 +7,18 @@ import Leaderboard from "./components/Leaderboard";
 import MyPage from "./components/MyPage";
 import ExploreMemes from "./components/ExploreMemes";
 import UserRanking from "./components/UserRanking";
+import MemeDetails from "./components/MemeDetails";
 import "./App.css";
 
 function App() {
   const { ready } = usePrivy();
 
   if (!ready) {
-    return <div>Loading...</div>;
+    return <div>
+      <div className="flex justify-center items-center h-screen">
+        <img src="/logo.svg" alt="logo" className="w-10 h-10" />
+      </div>
+    </div>;
   }
 
   return (
@@ -27,6 +32,7 @@ function App() {
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/explore" element={<ExploreMemes />} />
           <Route path="/user-ranking" element={<UserRanking />} />
+          <Route path="/meme/:id" element={<MemeDetails />} />
         </Routes>
       </div>
     </Router>

@@ -6,6 +6,7 @@ import ArtixMemeContestABI from '../abi/ArtixMemeContest.json';
 import ArtifactRankingABI from '../abi/ArtifactRanking.json';
 // import { uploadToPinata } from '../utils/pinata';
 import AIMarketing from './AIMarketing';
+import { Link } from 'react-router-dom';
 
 const ARTIX_CONTRACT_ADDRESS = import.meta.env.VITE_ARTIX_CONTRACT_ADDRESS;
 // const ARTIX_NFT_CONTRACT_ADDRESS = import.meta.env.VITE_ARTIX_NFT_CONTRACT_ADDRESS;
@@ -71,6 +72,16 @@ function ExploreMemes() {
   const [error, setError] = useState<string | null>(null);
   const [votingConfig, setVotingConfig] = useState<VotingConfig | null>(null);
   const [votingStatus, setVotingStatus] = useState<{ [key: number]: 'loading' | 'success' | 'error' | null }>({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState<'top rated' | 'new' | 'nft minted'>('top rated');
+  const [filteredMemes, setFilteredMemes] = useState<Meme[]>([]);
+  const [memesCache, setMemesCache] = useState<{
+    data: Meme[];
+    timestamp: number;
+  } | null>(null);
+
+  // Cache duration in milliseconds (5 minutes)
+  const CACHE_DURATION = 5 * 60 * 1000;
 
   // Get the authenticated wallet address
   const getAuthenticatedWallet = () => {
@@ -156,8 +167,46 @@ function ExploreMemes() {
     }
   };
 
+  // Update filtered memes whenever search query or filter changes
+  useEffect(() => {
+    if (!memes.length) return;
+
+    let filtered = [...memes];
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(meme => 
+        meme.title.toLowerCase().includes(query) ||
+        meme.description.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply status filter
+    switch (activeFilter) {
+      case 'top rated':
+        filtered.sort((a, b) => b.voteCount - a.voteCount);
+        break;
+      case 'new':
+        filtered.sort((a, b) => b.submissionTime - a.submissionTime);
+        break;
+      case 'nft minted':
+        filtered = filtered.filter(meme => meme.hasBeenMinted);
+        break;
+    }
+
+    setFilteredMemes(filtered);
+  }, [memes, searchQuery, activeFilter]);
+
+  // Modified fetchMemes to use cache
   const fetchMemes = async () => {
     try {
+      // Check cache first
+      if (memesCache && (Date.now() - memesCache.timestamp) < CACHE_DURATION) {
+        setMemes(memesCache.data);
+        return;
+      }
+
       setLoading(true);
       setError(null);
 
@@ -234,6 +283,12 @@ function ExploreMemes() {
         console.log('Setting memes without vote status:', memesList);
         setMemes(memesList);
       }
+
+      // Update cache with new data
+      setMemesCache({
+        data: memesList,
+        timestamp: Date.now()
+      });
 
     } catch (err: any) {
       console.error('Error fetching memes:', err);
@@ -385,6 +440,9 @@ function ExploreMemes() {
     return new Date(timestamp * 1000).toLocaleDateString();
   };
 
+  console.log(formatDate(1712832000))
+
+
   const getIPFSGatewayURL = (ipfsHash: string) => {
     const hash = ipfsHash.replace('ipfs://', '');
     return `https://ipfs.io/ipfs/${hash}`;
@@ -402,109 +460,208 @@ function ExploreMemes() {
     return `Vote (${ethers.utils.formatEther(votingConfig?.voteCost || '0')} ETH)`;
   };
 
+  console.log(getVoteButtonText(memes[0], 'loading'))
+
   return (
-    <div className="min-h-screen bg-[#F8F9FB] pt-8 pb-16">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="text-center mb-12">
-          <h1 className="text-[32px] font-bold text-gray-900 mb-2">
-            Explore Memes
-          </h1>
-          <p className="text-base text-gray-600">
-            Discover and vote for the best memes
-          </p>
-          
-          {/* Voting Configuration Info */}
-          {votingConfig && (
-            <div className="mt-4 p-4 bg-white rounded-lg shadow-sm">
-              <h2 className="text-lg font-semibold mb-2">Contest Information</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600">Vote Cost</p>
-                  <p className="font-medium text-gray-900">{ethers.utils.formatEther(votingConfig.voteCost)} ETH</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Max Votes</p>
-                  <p className="font-medium text-gray-900">{votingConfig.maxVotes}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Contest Duration</p>
-                  <p className="font-medium text-gray-900">{votingConfig.contestDuration / 86400} days</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Min Votes to Win</p>
-                  <p className="font-medium text-gray-900">{votingConfig.minVotesForWin}</p>
-                </div>
+    <div className="relative min-h-screen">
+      
+        {/* Accent gradient div */}
+        <div className="relative w-full h-[300px] rounded-t-full overflow-hidden mt-12">
+          <div className="absolute inset-0" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <h1 className="text-[64px] font-bold text-white mb-2 font-['Poppins'] text-center">
+              Discover Memes
+            </h1>
+            <p className="text-white/60 text-lg font-['Poppins'] text-center">
+              Discover and vote for the best memes
+            </p>
+          </div>
+        </div>
+      
+        {/* Voting Information */}
+        <div className="relative w-full h-[300px] rounded-t-full mb-12 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-[#010EFB] to-[#121212] opacity-45" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <h2 className="text-3xl font-bold text-white mb-2 font-['Poppins'] text-center">
+              Voting Information
+            </h2>
+            <div className="grid grid-cols-2 gap-8 max-w-md mx-auto">
+              <div className="bg-[#1A1A1A]/50 backdrop-blur-sm rounded-2xl p-6">
+                <span className="text-[#FFD700] text-sm font-medium font-['Poppins']">vote cost</span>
+                <p className="text-white text-2xl font-bold font-['Poppins']">
+                  {votingConfig ? ethers.utils.formatEther(votingConfig.voteCost) : '0.01'} ETH
+                </p>
+              </div>
+              <div className="bg-[#1A1A1A]/50 backdrop-blur-sm rounded-2xl p-6">
+                <span className="text-[#FFD700] text-sm font-medium font-['Poppins']">max votes</span>
+                <p className="text-white text-2xl font-bold font-['Poppins']">
+                  {votingConfig ? votingConfig.maxVotes : '100'}
+                </p>
               </div>
             </div>
-          )}
+            {!authenticated && (
+              <button
+                onClick={login}
+                className="mt-8 px-8 py-3 bg-[#FFD700] text-[#121212] rounded-full font-['Poppins'] font-medium hover:bg-[#FFD700]/90 transition-all"
+              >
+                + connect wallet
+              </button>
+            )}
+          </div>
         </div>
 
+      <div className="relative max-w-7xl mx-auto px-4">
+
+
+        {/* Filters Section */}
+        <div className="flex items-center justify-between py-6 mb-8">
+          {/* Left side - Filters */}
+          <div className="flex items-center gap-4">
+            <span className="text-white/60 text-sm font-['Poppins']">Filter</span>
+            <button 
+              onClick={() => setActiveFilter('top rated')}
+              className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors font-['Poppins'] ${
+                activeFilter === 'top rated' 
+                  ? 'border-[#FFD700] text-[#FFD700]' 
+                  : 'border-transparent text-white/60 hover:text-white'
+              }`}
+            >
+              top rated
+            </button>
+            <button 
+              onClick={() => setActiveFilter('new')}
+              className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors font-['Poppins'] ${
+                activeFilter === 'new' 
+                  ? 'border-[#FFD700] text-[#FFD700]' 
+                  : 'border-transparent text-white/60 hover:text-white'
+              }`}
+            >
+              new
+            </button>
+            <button 
+              onClick={() => setActiveFilter('nft minted')}
+              className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors font-['Poppins'] ${
+                activeFilter === 'nft minted' 
+                  ? 'border-[#FFD700] text-[#FFD700]' 
+                  : 'border-transparent text-white/60 hover:text-white'
+              }`}
+            >
+              NFT minted
+            </button>
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative w-[300px]">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <svg className="w-4 h-4 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="search memes..."
+              className="w-full bg-transparent text-white pl-10 pr-4 py-1.5 rounded-full text-sm focus:outline-none border border-[#FFD700]/50 focus:border-[#FFD700] font-['Poppins']"
+            />
+          </div>
+        </div>
+
+        {/* Meme Grid */}
         {loading ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600">Loading memes...</p>
+          <div className="flex justify-center items-center h-[420px]">
+            <div className="text-white/70 text-lg font-['Poppins']">Loading memes...</div>
           </div>
         ) : error ? (
           <div className="text-center py-12">
-            <p className="text-red-600">{error}</p>
+            <p className="text-red-500">{error}</p>
           </div>
-        ) : memes.length === 0 ? (
+        ) : filteredMemes.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600">No memes found</p>
+            <p className="text-white/60">No memes found</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {memes.map((meme) => (
-              <div key={meme.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
-                <div className="aspect-square bg-gray-100">
-                  <img
-                    src={getIPFSGatewayURL(meme.ipfsHash)}
-                    alt={meme.title}
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{meme.title}</h3>
-                  <p className="text-sm text-gray-600 mb-4">{meme.description}</p>
-                  <div className="flex items-center justify-between text-sm text-gray-500">
-                    <span>By: {formatAddress(meme.creator)}</span>
-                    <span>{formatDate(meme.submissionTime)}</span>
+          <div className="grid grid-cols-3 gap-8">
+            {filteredMemes.map((meme) => (
+              <div key={meme.id} className="relative bg-[#1A1A1A] rounded-3xl overflow-hidden flex flex-col h-[480px] group">
+                {/* Top Bar - Fixed height */}
+                <div className="h-12 bg-black/60 backdrop-blur-sm flex items-center justify-between px-4 flex-shrink-0 z-10">
+                  {/* Left side - Vote */}
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        voteMeme(meme.id);
+                      }}
+                      disabled={!authenticated || meme.hasVoted || votingStatus[meme.id] === 'loading'}
+                      className="relative group"
+                    >
+                      <svg 
+                        className={`w-5 h-5 ${meme.hasVoted ? 'text-[#FFD700]' : 'text-white/60 group-hover:text-white'}`} 
+                        viewBox="0 0 24 24" 
+                        fill="currentColor"
+                      >
+                        <path d="M12 4l8 8h-6v8h-4v-8H4l8-8z"/>
+                      </svg>
+                    </button>
+                    <span className={`text-sm font-medium ${
+                      meme.hasVoted ? 'text-[#FFD700]' : 'text-white/60'
+                    }`}>
+                      {meme.voteCount}
+                    </span>
+                    <svg 
+                      className={`w-5 h-5 ${meme.hasVoted ? 'text-[#FFD700]' : 'text-white/60 group-hover:text-white'}`} 
+                      viewBox="0 0 24 24" 
+                      fill="currentColor"
+                    >
+                      <path d="M12 20l-8-8h6V4h4v8h6l-8 8z"/>
+                    </svg>
                   </div>
-                  <div className="mt-4 flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Votes: {meme.voteCount}</span>
-                    <div className="flex items-center gap-4">
-                      <a
-                        href={meme.socialLinks}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-blue-600 hover:text-blue-700"
-                      >
-                        Social Links
-                      </a>
-                      <button
-                        onClick={() => voteMeme(meme.id)}
-                        disabled={!authenticated || meme.hasVoted || votingStatus[meme.id] === 'loading'}
-                        className={`px-4 py-2 text-sm font-medium rounded ${
-                          !authenticated || meme.hasVoted
-                            ? 'bg-gray-100 text-gray-500'
-                            : votingStatus[meme.id] === 'success'
-                            ? 'bg-green-500 text-white'
-                            : votingStatus[meme.id] === 'error'
-                            ? 'bg-red-500 text-white'
-                            : 'bg-blue-600 text-white hover:bg-blue-700'
-                        }`}
-                      >
-                        {getVoteButtonText(meme, votingStatus[meme.id])}
-                      </button>
-                      
-                      {/* Add AI Marketing Section */}
+
+                  {/* Right side - NFT Badge */}
+                  {(meme.hasBeenMinted || meme.voteCount >= (votingConfig?.minVotesForWin || 0)) && (
+                    <div className="flex items-center gap-1.5">
+                      <svg className="w-4 h-4 text-[#FFD700]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                      </svg>
+                      <span className="text-sm text-[#FFD700]">
+                        {meme.hasBeenMinted ? 'NFT minted' : 'Ready to mint'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Clickable area */}
+                <Link 
+                  to={`/meme/${meme.id}`} 
+                  className="flex flex-col flex-1"
+                >
+                  {/* Meme Image - Fixed height with overflow hidden */}
+                  <div className="h-[300px] flex-shrink-0 overflow-hidden">
+                    <img 
+                      src={getIPFSGatewayURL(meme.ipfsHash)}
+                      alt={meme.title}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
+
+                  {/* Content - Fixed height */}
+                  <div className="p-4 bg-[#1A1A1A] flex-1 flex flex-col">
+                    <h3 className="text-white text-lg font-semibold font-['Poppins'] mb-2 line-clamp-1">{meme.title}</h3>
+                    <p className="text-white/60 text-sm font-['Poppins'] line-clamp-2 mb-auto">{meme.description}</p>
+                    
+                    <div className="flex items-center justify-between mt-4">
+                      <span className="text-white/40 text-sm">
+                        by {formatAddress(meme.creator)}
+                      </span>
                       {meme.voteCount >= (votingConfig?.minVotesForWin || 0) && (
-                        <div className="mt-4">
+                        <div onClick={(e) => e.stopPropagation()}>
                           <AIMarketing meme={meme} />
                         </div>
                       )}
                     </div>
                   </div>
-                </div>
+                </Link>
               </div>
             ))}
           </div>

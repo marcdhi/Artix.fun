@@ -9,11 +9,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <PrivyProvider
       appId="cm6qjedst01xyec3lz1sub5l5"
       config={{
-        loginMethods: ['email', 'wallet'],
+        loginMethods: ['email', 'wallet', 'google'],
         appearance: {
-          theme: 'light',
-          accentColor: '#4F46E5',
-          logo: '/logo.png',
+          theme: 'dark',
+          accentColor: '#010EFB',
+          logo: '/logo.svg',
         },
         embeddedWallets: {
           createOnLogin: 'users-without-wallets',
