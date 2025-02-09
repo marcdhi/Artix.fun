@@ -61,22 +61,37 @@ In the past, meme creators **did not receive proper recognition or rewards**, ev
 ## Demo preview
 ![home](https://github.com/user-attachments/assets/8527ed40-b982-4b45-8dd3-8d9d07397ee4)
 
+<p>Home Page</p>
+
 ![profile](https://github.com/user-attachments/assets/cb7781cf-f8b7-44ef-a2f0-2779c44421b1)
+
+<p>You can view your profile here</p>
 
 ![meme](https://github.com/user-attachments/assets/88bec482-00d4-4b89-b4fe-c650d0cdba97)
 
+<p>Here comes the meme!</p>
+
 ![discover-meme](https://github.com/user-attachments/assets/74f4f47c-bcf2-48a4-8ea1-3f21943b3b01)
 
+<p>Discover other memes</p>
 
 ![create-meme](https://github.com/user-attachments/assets/13dd617e-7e56-44f5-a294-c060ed9f8383)
+
+<p>Create your own meme NFT</p>
 
 ![create-meme-2](https://github.com/user-attachments/assets/6f21432c-900d-4977-ba2e-1eb1e994a47e)
 
 ![leaderboard](https://github.com/user-attachments/assets/b6ed9c95-dbf7-4928-8847-61db83e5c4bb)
 
+<p>We have got a leaderboard!</p>
+
 ![minted](https://github.com/user-attachments/assets/dd06b663-8e94-4383-b1c6-5176773aa132)
 
+<p>Some minted memes!</p>
+
 ![leaderboard](https://github.com/user-attachments/assets/58d9927a-58ec-4364-973a-88b6511a3328)
+
+<p>Your voting history.</p>
 
 ![voting-history](https://github.com/user-attachments/assets/e54618ab-f8e2-47d0-87a8-10c379eb74d4)
 
