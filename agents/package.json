@@ -1,0 +1,30 @@
+{
+  "name": "artix-twitter-agent",
+  "version": "1.0.0",
+  "description": "Twitter marketing agent for Artix.fun",
+  "main": "twitter-agent.js",
+  "scripts": {
+    "start": "node twitter-agent.js",
+    "dev": "nodemon twitter-agent.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.36.3",
+    "@coinbase/agentkit": "^0.1.2",
+    "@coinbase/agentkit-langchain": "^0.1.0",
+    "@langchain/core": "^0.3.39",
+    "@langchain/langgraph": "^0.2.45",
+    "@langchain/openai": "^0.4.3",
+    "agent-twitter-client": "^0.0.18",
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "viem": "^2.22.23"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}

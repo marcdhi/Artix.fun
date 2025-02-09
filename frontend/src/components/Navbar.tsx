@@ -3,18 +3,20 @@ import { usePrivy } from '@privy-io/react-auth';
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 
-const Logo = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M8.5 10L12 13.5L15.5 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
+// const Logo = () => (
+//   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+//     <path d="M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+//     <path d="M8.5 10L12 13.5L15.5 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+//   </svg>
+// );
 
 const Navbar = () => {
-  const { login, ready, authenticated, user, logout } = usePrivy();
+  const { login, authenticated, user, logout } = usePrivy();
   const [scrolled, setScrolled] = useState(false);
   const [userDisplayName, setUserDisplayName] = useState<string>('');
   const [balance, setBalance] = useState<string>('0.00');
+
+  console.log('balance', balance);
   
   useEffect(() => {
     const handleScroll = () => {
